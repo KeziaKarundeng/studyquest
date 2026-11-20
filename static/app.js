@@ -73,3 +73,43 @@ if(missionForm){
         catch(error){feedback(error.message,true);button.disabled=false;}
     });
 }
+
+// Starting a mission records personal progress without awarding completion XP.
+document.addEventListener('click', async event => {
+    const button = event.target.closest('[data-start-id]');
+    if (!button || button.disabled) return;
+    button.disabled = true;
+    try {
+        await api('/api/missions/' + encodeURIComponent(button.dataset.startId) + '/start', {method: 'POST'});
+        window.location.reload();
+    } catch (error) {
+        feedback(error.message, true);
+        button.disabled = false;
+    }
+});
+
+document.addEventListener('submit', async event => {
+    const form = event.target.closest('[data-grade-form]');
+    if (!form) return;
+    event.preventDefault();
+    const button = form.querySelector('[type="submit"]');
+    if (button.disabled) return;
+    const message = form.querySelector('[data-grade-feedback]');
+    button.disabled = true;
+    message.textContent = 'Menyimpan…';
+    try {
+        const data = await api('/api/penilaian-pdf', {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({id_soal: form.dataset.soal, nim: form.dataset.nim,
+                nilai: form.elements.nilai.value, catatan: form.elements.catatan.value})
+        });
+        form.querySelector('.grade-status').textContent = `Sudah dinilai: ${data.nilai} / 100`;
+        message.className = 'grade-feedback';
+        message.textContent = data.pesan;
+    } catch (error) {
+        message.className = 'grade-feedback error';
+        message.textContent = error.message;
+    } finally {
+        button.disabled = false;
+    }
+});

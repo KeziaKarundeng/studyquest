@@ -14,15 +14,13 @@
             <nav aria-label="Menu utama"><ul>
             {% if session.get('role') == 'dosen' %}
                 <li><a href="{{ url_for('dashboard') }}" class="{{ 'active' if request.endpoint == 'dashboard' else '' }}"><span class="nav-icon">⌂</span>Beranda</a></li>
-                <li><a href="{{ url_for('page_missions') }}" class="{{ 'active' if request.endpoint == 'page_missions' else '' }}"><span class="nav-icon">☑</span>Kelola misi</a></li>
-                <li><a href="{{ url_for('unggah_soal') }}" class="{{ 'active' if request.endpoint == 'unggah_soal' else '' }}"><span class="nav-icon">⇪</span>Unggah soal</a></li>
+                <li><a href="{{ url_for('page_missions') }}" class="{{ 'active' if request.endpoint in ['page_missions', 'unggah_soal'] else '' }}"><span class="nav-icon">☑</span>Kelola misi</a></li>
                 <li><a href="{{ url_for('lihat_progres') }}" class="{{ 'active' if request.endpoint == 'lihat_progres' else '' }}"><span class="nav-icon">📊</span>Lihat progres</a></li>
                 <li><a href="{{ url_for('perspektif_mahasiswa') }}" class="{{ 'active' if request.endpoint == 'perspektif_mahasiswa' else '' }}"><span class="nav-icon">👁</span>Perspektif mhs</a></li>
                 <li><a href="{{ url_for('page_achievements') }}" class="{{ 'active' if request.endpoint == 'page_achievements' else '' }}"><span class="nav-icon">✺</span>Koleksi badge</a></li>
             {% else %}
                 <li><a href="{{ url_for('dashboard') }}" class="{{ 'active' if request.endpoint == 'dashboard' else '' }}"><span class="nav-icon">⌂</span>Beranda</a></li>
-                <li><a href="{{ url_for('soal_mahasiswa') }}" class="{{ 'active' if request.endpoint == 'soal_mahasiswa' else '' }}"><span class="nav-icon">✍</span>Kerjakan soal</a></li>
-                <li><a href="{{ url_for('page_cek_soal') }}" class="{{ 'active' if request.endpoint == 'page_cek_soal' else '' }}"><span class="nav-icon">✎</span>Cek soal</a></li>
+                <li><a href="{{ url_for('soal_mahasiswa') }}" class="{{ 'active' if request.endpoint in ['soal_mahasiswa', 'page_missions'] else '' }}"><span class="nav-icon">✍</span>Misi kamu</a></li>
                 <li><a href="{{ url_for('page_achievements') }}" class="{{ 'active' if request.endpoint == 'page_achievements' else '' }}"><span class="nav-icon">✺</span>Koleksi badge</a></li>
                 <li><a href="{{ url_for('page_history') }}" class="{{ 'active' if request.endpoint == 'page_history' else '' }}"><span class="nav-icon">◷</span>Riwayat</a></li>
                 <li><a href="{{ url_for('page_profile') }}" class="{{ 'active' if request.endpoint == 'page_profile' else '' }}"><span class="nav-icon">☺</span>Profil</a></li>
@@ -44,7 +42,7 @@
               {% endif %}
             {% endwith %}
             
-            <div class="breadcrumb"><span>StudyQuest</span> / {{ {"dashboard": "Beranda", "page_missions": "Misi kamu", "page_achievements": "Koleksi badge", "page_history": "Riwayat", "page_profile": "Profil", "page_cek_soal": "Cek soal"}.get(request.endpoint, "Beranda") }}</div>
+            <div class="breadcrumb"><span>StudyQuest</span> / {{ {"dashboard": "Beranda", "page_missions": "Misi kamu", "page_achievements": "Koleksi badge", "page_history": "Riwayat", "page_profile": "Profil", "page_cek_soal": "Cek soal", "soal_mahasiswa": "Misi kamu", "unggah_soal": "Buat misi", "lihat_progres": "Lihat progres", "perspektif_mahasiswa": "Perspektif mahasiswa"}.get(request.endpoint, "Beranda") }}</div>
             {% block content %}{% endblock %}
         </main>
     </div>

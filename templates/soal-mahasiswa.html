@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>✍ Kerjakan Soal</h2>
-<p class="soal-subtitle">Daftar soal yang harus Anda kerjakan</p>
+<h2>✦ Misi kamu</h2>
+<p class="soal-subtitle">Pilih misi, kirim pengerjaan, kumpulkan XP.</p>
 
 {% if preview_as_dosen %}
 <div class="login-error" style="background: rgba(255,170,0,0.12); border-color: var(--warning); color: var(--warning);">
@@ -10,15 +10,22 @@
 </div>
 {% endif %}
 
-<!-- Soal belum dikerjakan -->
+
+{% if misi_biasa %}<h3>Misi tugas</h3><div class="missions-list" style="margin: 20px 0;">{% for m in misi_biasa %}<article class="mission-item"><div class="mission-info"><h3>{{ m.judul }}</h3><p>{{ m.mata_kuliah }} · {{ m.tenggat or 'Tanpa tenggat' }}</p><p>{{ m.deskripsi }}</p></div><span class="xp-pill">+{{ m.hitung_xp() }} XP</span><span class="mission-state">{{ m.status | capitalize }}</span>{% if m.status == 'belum mulai' %}<button type="button" class="btn-edit" data-start-id="{{ m.id }}" {{ 'disabled' if preview_as_dosen }}>Mulai misi ↗</button>{% endif %}<button class="btn-complete" data-complete-id="{{ m.id }}" {{ 'disabled' if preview_as_dosen }}>Sudah selesai ✓</button></article>{% endfor %}</div>{% endif %}
+<p class="form-hint">XP diberikan satu kali per misi saat pengerjaan dikirim. Nilai benar/salah ditampilkan terpisah.</p>
+
+<!-- Misi aktif -->
 {% if soal_belum %}
-<h3 style="color: var(--text-primary); margin: 20px 0 12px;">📋 Soal Belum Dikerjakan ({{ soal_belum|length }})</h3>
+<h3 style="color: var(--text-primary); margin: 20px 0 12px;">Misi aktif ({{ soal_belum|length }})</h3>
 <div class="soal-list">
     {% for s in soal_belum %}
     <div class="soal-card" id="soal-card-{{ s.id }}">
+        <h3>{{ s.judul }}</h3><p class="soal-meta">{{ s.deskripsi or 'Selesaikan pengerjaan untuk mendapatkan XP.' }}</p><p class="soal-meta">{{ s.tenggat or 'Tanpa tenggat' }} · <strong>+{{ s.xp }} XP</strong> saat dikirim</p>
+        <span class="mission-state">{{ mission_status.get('soal_' ~ s.id, 'belum mulai') | capitalize }}</span>
+        {% if mission_status.get('soal_' ~ s.id) == 'belum mulai' %}<button type="button" class="btn-edit" data-start-id="soal_{{ s.id }}" {{ 'disabled' if preview_as_dosen }}>Mulai misi ↗</button>{% endif %}
         <div class="soal-header">
             <span class="soal-mk-badge">{{ s.mata_kuliah }}</span>
-            <span class="soal-type-badge {{ s.tipe }}">{{ 'Pilihan Ganda' if s.tipe == 'pilihan_ganda' else 'PDF' }}</span>
+            <span class="soal-type-badge {{ s.tipe }}">{{ {'pilihan_ganda':'Pilihan ganda', 'pdf':'PDF', 'tanpa_soal':'Tugas biasa'}.get(s.tipe, s.tipe) }}</span>
         </div>
 
         {% if s.tipe == 'pilihan_ganda' %}
@@ -34,31 +41,33 @@
             {% endfor %}
         </ul>
         <button class="btn-kirim {{ 'disabled' if preview_as_dosen }}" onclick="kirimJawaban('{{ s.id }}')" {{ 'disabled' if preview_as_dosen }}>
-            <i class="fas fa-paper-plane"></i> Kirim Jawaban
+            <i class="fas fa-paper-plane"></i> Kirim & selesaikan misi
         </button>
         {% else %}
+        {% if s.tipe == 'pdf' %}
         <p class="soal-pertanyaan"><i class="fas fa-file-pdf"></i> {{ s.nama_asli }}</p>
         <a href="/static/soal/{{ s.nama_file }}" target="_blank" class="btn-lihat-pdf">
             <i class="fas fa-external-link-alt"></i> Lihat PDF
         </a>
+        {% endif %}
         <div class="form-group" style="margin-top: 12px;">
             <label>Jawaban / Kesimpulan Anda:</label>
             <textarea id="jawaban-text-{{ s.id }}" rows="3" placeholder="Tulis jawaban Anda..." {{ 'disabled' if preview_as_dosen }}></textarea>
         </div>
         <button class="btn-kirim {{ 'disabled' if preview_as_dosen }}" onclick="kirimJawaban('{{ s.id }}', true)" {{ 'disabled' if preview_as_dosen }}>
-            <i class="fas fa-paper-plane"></i> Kirim Jawaban
+            <i class="fas fa-paper-plane"></i> Kirim & selesaikan misi
         </button>
         {% endif %}
     </div>
     {% endfor %}
 </div>
 {% else %}
-<p class="empty-state">🎉 Semua soal sudah dikerjakan!</p>
+<p class="empty-state">Belum ada misi dengan lampiran yang perlu dikerjakan.</p>
 {% endif %}
 
 <!-- Soal sudah dikerjakan -->
 {% if soal_selesai %}
-<h3 style="color: var(--text-primary); margin: 24px 0 12px;">✅ Soal Sudah Dikerjakan ({{ soal_selesai|length }})</h3>
+<h3 style="color: var(--text-primary); margin: 24px 0 12px;">Misi selesai ({{ soal_selesai|length }})</h3>
 <div class="soal-list">
     {% for item in soal_selesai %}
     <div class="soal-card soal-done">
@@ -78,11 +87,21 @@
             {% endif %}
         </div>
         {% else %}
-        <p class="soal-pertanyaan"><i class="fas fa-file-pdf"></i> {{ item.soal.nama_asli }}</p>
+        <p class="soal-pertanyaan">{{ item.soal.judul }}</p>
         <div class="soal-jawaban">
             <i class="fas fa-check-circle"></i> Jawaban Anda: {{ item.jawaban.jawaban[:100] }}{% if item.jawaban.jawaban|length > 100 %}...{% endif %}
         </div>
         {% endif %}
+        {% if item.soal.tipe == 'pdf' %}
+        <section class="grade-result"><h4>Penilaian dosen</h4>
+        {% if item.jawaban.nilai is defined and item.jawaban.nilai is not none %}
+        <p class="grade-score">{{ item.jawaban.nilai }} <span>/ 100</span></p>
+        {% if item.jawaban.catatan %}<p class="submission-text">{{ item.jawaban.catatan }}</p>{% endif %}
+        <p class="soal-meta">Dinilai oleh {{ item.jawaban.dinilai_oleh }} · {{ item.jawaban.dinilai_pada[:16].replace('T', ' ') }}</p>
+        {% else %}<p>Pengerjaan terkirim. Menunggu penilaian dosen.</p>{% endif %}
+        </section>
+        {% endif %}
+        <p class="soal-meta">+{{ item.jawaban.xp_diberikan | default(item.soal.xp) }} XP · Misi selesai</p>
         <p class="soal-meta">Dikerjakan: {{ item.jawaban.waktu_dikerjakan[:16].replace('T', ' ') }}</p>
     </div>
     {% endfor %}
@@ -109,6 +128,10 @@ async function kirimJawaban(idSoal, isText = false) {
         return;
     }
 
+    const card = document.getElementById('soal-card-' + idSoal);
+    const button = card.querySelector('.btn-kirim');
+    if (button.disabled) return;
+    button.disabled = true;
     try {
         const resp = await fetch('/kirim-jawaban', {
             method: 'POST',
@@ -118,13 +141,15 @@ async function kirimJawaban(idSoal, isText = false) {
         const data = await resp.json();
 
         if (data.status === 'sukses') {
-            alert(data.pesan + (data.benar_salah ? ` (${data.benar_salah.toUpperCase()})` : ''));
+            alert(data.pesan + ` +${data.xp_diberikan || 0} XP` + (data.benar_salah ? ` (${data.benar_salah.toUpperCase()})` : ''));
             location.reload();
         } else {
             alert(data.pesan);
         }
     } catch (err) {
         alert('Terjadi kesalahan: ' + err.message);
+    } finally {
+        button.disabled = false;
     }
 }
 </script>

@@ -2,13 +2,13 @@
 
 {% block content %}
 <h2>📊 Lihat Progres</h2>
-<p class="soal-subtitle">Progres pengerjaan soal oleh mahasiswa</p>
+<p class="soal-subtitle">Progres misi dan pengerjaan mahasiswa</p>
 
 <div class="stats-cards" style="margin-bottom: 24px;">
     <div class="stat-card card-active">
         <div class="card-icon">📋</div>
         <div class="card-value">{{ total_soal }}</div>
-        <div class="card-label">Total Soal</div>
+        <div class="card-label">Misi dengan isi</div>
     </div>
     <div class="stat-card card-selesai">
         <div class="card-icon">✍</div>
@@ -23,8 +23,8 @@
     <div class="soal-card">
         <div class="soal-header">
             <span class="soal-mk-badge">{{ item.soal.mata_kuliah }}</span>
-            <span class="soal-type-badge {{ item.soal.tipe }}">{{ 'PG' if item.soal.tipe == 'pilihan_ganda' else 'PDF' }}</span>
-            <span class="soal-status {{ item.soal.status }}">{{ item.total_jawab }} mahasiswa menjawab</span>
+            <span class="soal-type-badge {{ item.soal.tipe }}">{{ {'pilihan_ganda':'PG', 'pdf':'PDF', 'tanpa_soal':'Tugas'}.get(item.soal.tipe, item.soal.tipe) }}</span>
+            <span class="soal-status {{ item.soal.status }}">{{ item.total_mulai }} mulai · {{ item.total_jawab }} mengirim</span>
         </div>
 
         {% if item.soal.tipe == 'pilihan_ganda' %}
@@ -33,7 +33,7 @@
             <i class="fas fa-check-circle"></i> Jawaban benar: <strong>{{ item.soal.jawaban_benar }}</strong>
         </div>
         {% else %}
-        <p class="soal-pertanyaan"><i class="fas fa-file-pdf"></i> {{ item.soal.nama_asli }}</p>
+        <p class="soal-pertanyaan"><i class="fas fa-file-pdf"></i> {{ item.soal.judul or item.soal.nama_asli }}</p>
         {% endif %}
 
         {% if item.jawaban_list %}
@@ -43,12 +43,23 @@
             <div class="jawaban-item {{ j.benar_salah or '' }}">
                 <span class="jawaban-nama">{{ j.nama }}</span>
                 <span class="jawaban-nim">({{ j.nim }})</span>
+                <span class="xp-pill">+{{ j.xp_diberikan | default(0) }} XP</span>
                 <span class="jawaban-isi">: {{ j.jawaban[:80] }}{% if j.jawaban|length > 80 %}...{% endif %}</span>
                 {% if j.benar_salah %}
                 <span class="jawaban-status {{ j.benar_salah }}">{{ j.benar_salah|upper }}</span>
                 {% endif %}
                 <span class="jawaban-waktu">{{ j.waktu_dikerjakan[:16].replace('T', ' ') }}</span>
             </div>
+            {% if item.soal.tipe == 'pdf' %}
+            <section class="grading-card">
+                <h4>Pengerjaan {{ j.nama }}</h4><p class="submission-text">{{ j.jawaban }}</p>
+                <form data-grade-form data-soal="{{ item.soal.id }}" data-nim="{{ j.nim }}">
+                    <div class="form-row"><div class="form-group"><label for="nilai-{{ item.soal.id }}-{{ loop.index }}">Nilai (0–100)</label><input id="nilai-{{ item.soal.id }}-{{ loop.index }}" name="nilai" type="number" min="0" max="100" step="0.01" required value="{{ j.nilai if j.nilai is defined and j.nilai is not none else '' }}"></div><div class="form-group"><label for="catatan-{{ item.soal.id }}-{{ loop.index }}">Catatan (opsional)</label><textarea id="catatan-{{ item.soal.id }}-{{ loop.index }}" name="catatan" maxlength="3000" placeholder="Bagian yang sudah bagus atau perlu diperbaiki">{{ j.catatan or '' }}</textarea></div></div>
+                    <p class="grade-status">{{ 'Sudah dinilai: ' ~ j.nilai ~ ' / 100' if j.nilai is defined and j.nilai is not none else 'Belum dinilai' }}</p>
+                    <button class="btn-submit" type="submit">Simpan penilaian</button><p data-grade-feedback role="status" aria-live="polite"></p>
+                </form>
+            </section>
+            {% endif %}
             {% endfor %}
         </div>
         {% else %}

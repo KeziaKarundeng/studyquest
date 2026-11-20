@@ -1870,3 +1870,107 @@ tbody tr:hover {
     font-size: 0.75rem;
     margin-top: 4px;
 }
+
+/* Uploaded questions belong in the dashboard content, not in badge tiles. */
+.dashboard-questions {
+    padding: 25px;
+    margin-bottom: 34px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: 16px;
+}
+.questions-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+.questions-heading h2 { font-size: 1.45rem; }
+.questions-heading p:not(.eyebrow) { font-size: .8rem; margin-top: 7px; }
+.questions-heading > a { flex-shrink: 0; }
+.dashboard-question-list { display: grid; gap: 12px; }
+.dashboard-question {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+.question-symbol {
+    display: grid;
+    place-items: center;
+    width: 43px;
+    height: 43px;
+    flex-shrink: 0;
+    border-radius: 12px;
+    background: #edf2ff;
+    color: var(--primary);
+    font-size: 1.5rem;
+}
+.question-copy { flex: 1; min-width: 0; }
+.question-course { color: var(--primary); font-size: .66rem; font-weight: 750; }
+.question-copy h3 {
+    font-size: .94rem;
+    letter-spacing: -.02em;
+    line-height: 1.5;
+    margin: 3px 0;
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.question-copy p { font-size: .7rem; }
+.question-state {
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: #fff6bd;
+    color: #705500;
+    font-size: .65rem;
+    font-weight: 650;
+    white-space: nowrap;
+}
+.question-state.done { background: #e2f1e2; color: var(--success); }
+.dashboard-question > a { flex-shrink: 0; white-space: nowrap; }
+.questions-empty { display: flex; gap: 15px; align-items: center; padding: 20px; background: #f5f5ef; border-radius: 12px; }
+.questions-empty > span { color: var(--primary); font-size: 2rem; }
+.questions-empty h3 { font-size: .95rem; margin-bottom: 6px; }
+.questions-empty p { font-size: .8rem; }
+@media (max-width: 1000px) {
+    .dashboard-question { flex-wrap: wrap; }
+    .question-copy { flex-basis: calc(100% - 60px); }
+    .question-state { margin-left: 59px; }
+    .dashboard-question > a { margin-left: auto; }
+}
+@media (max-width: 600px) {
+    .dashboard-questions { padding: 18px; margin-bottom: 28px; }
+    .questions-heading { align-items: start; flex-direction: column; gap: 12px; }
+    .questions-heading h2 { font-size: 1.3rem; }
+    .dashboard-question { padding: 14px; gap: 12px; }
+    .question-state { margin-left: 0; }
+    .dashboard-question > a { font-size: .72rem; }
+}
+
+.upload-fields { border: 0; padding: 0; margin: 0; min-width: 0; }
+
+/* Mission content shares the same actions and accessible blue accents. */
+.btn-kirim { background: var(--primary); color: white; }
+.soal-type-badge.pilihan_ganda { background: #edf2ff; color: var(--primary); border-color: #8da9ef; }
+.btn-lihat-pdf { color: var(--primary); border-color: var(--primary); }
+.soal-pilihan-item input[type="radio"] { accent-color: var(--primary); }
+#mission-reward { margin-bottom: 20px; }
+.soal-card > h3 { margin-bottom: 10px; }
+
+.grading-card, .grade-result { padding: 20px; margin: 15px 0; border: 1px solid var(--border); border-radius: 12px; background: #f5f7ff; }
+.grading-card h4, .grade-result h4 { margin-bottom: 12px; }
+.submission-text { white-space: pre-wrap; overflow-wrap: anywhere; color: var(--text-primary); margin-bottom: 20px; font-size: .9rem; }
+.grading-card .form-row { grid-template-columns: minmax(100px, 160px) minmax(0, 1fr); }
+.grade-status { font-size: .8rem; margin-bottom: 12px; }
+.grade-feedback { font-size: .8rem; color: var(--success); margin-top: 12px; }
+.grade-feedback.error { color: var(--danger); }
+.grade-score { font-size: 2rem; font-weight: 800; color: var(--primary); margin-bottom: 12px; }
+.grade-score span { font-size: .9rem; color: var(--text-muted); }
+.mission-state { display: inline-block; margin: 6px; font-size: .7rem; font-weight: 650; color: var(--primary); }
+@media (max-width: 600px) { .grading-card .form-row { grid-template-columns: 1fr; } }

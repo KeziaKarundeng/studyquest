@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>⇪ Unggah Soal</h2>
-<p class="soal-subtitle">Unggah soal pilihan ganda atau file PDF untuk mahasiswa</p>
+<h2>✦ Buat misi</h2>
+<p class="soal-subtitle">Satu misi, satu tujuan. Tambahkan soal atau PDF kalau perlu.</p>
 
 {% if error %}
 <div class="login-error"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
@@ -12,46 +12,52 @@
 {% endif %}
 
 <div class="soal-card" style="margin-bottom: 24px;">
-    <h3 style="margin-bottom: 16px; color: var(--text-primary);">Form Unggah Soal</h3>
+    <h3 style="margin-bottom: 16px; color: var(--text-primary);">Detail misi</h3>
 
-    <form method="POST" action="{{ url_for('unggah_soal') }}" id="form-unggah">
+    <form method="POST" action="{{ url_for('unggah_soal') }}" id="form-unggah" enctype="multipart/form-data">
+        <div class="form-group"><label for="judul-misi">Judul misi *</label><input id="judul-misi" name="judul" required placeholder="Contoh: Praktikum class dan object"></div>
+        <div class="form-group"><label for="deskripsi-misi">Instruksi</label><textarea id="deskripsi-misi" name="deskripsi" placeholder="Apa yang perlu mahasiswa kerjakan?"></textarea></div>
+        <div class="form-row"><div class="form-group"><label for="jenis-misi">Jenis misi</label><select id="jenis-misi" name="jenis"><option value="individu">Individu</option><option value="kelompok">Kelompok</option><option value="ujian">Ujian</option></select></div><div class="form-group"><label for="kesulitan-misi">Kesulitan</label><select id="kesulitan-misi" name="tingkat_kesulitan"><option value="mudah">Mudah</option><option value="sedang">Sedang</option><option value="sulit">Sulit</option></select></div></div>
+        <div class="form-group"><label for="tenggat-misi">Tenggat (opsional)</label><input id="tenggat-misi" type="date" name="tenggat"></div>
+        <p class="form-hint" id="mission-reward">XP diberikan sekali saat pengerjaan dikirim, termasuk jawaban pilihan ganda yang salah. PDF dihitung selesai saat jawaban dikirim.</p>
         <div class="form-group">
             <label>Mata Kuliah *</label>
             <input type="text" name="mata_kuliah" placeholder="Contoh: Pemrograman Berorientasi Objek" required>
         </div>
 
         <div class="form-group">
-            <label>Tipe Soal *</label>
+            <label>Isi misi *</label>
             <select name="tipe" id="tipe-soal" onchange="switchTipe()">
+                <option value="tanpa_soal">Tugas biasa</option>
                 <option value="pilihan_ganda">Pilihan Ganda</option>
                 <option value="pdf">File PDF</option>
             </select>
         </div>
 
-        <div id="form-pilihan-ganda">
+        <fieldset id="form-pilihan-ganda" class="upload-fields">
             <div class="form-group">
                 <label>Pertanyaan *</label>
-                <textarea name="pertanyaan" rows="3" placeholder="Tulis pertanyaan..."></textarea>
+                <textarea name="pertanyaan" required rows="3" placeholder="Tulis pertanyaan..."></textarea>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
                     <label>Pilihan A *</label>
-                    <input type="text" name="pilihan_a" placeholder="Pilihan A">
+                    <input type="text" name="pilihan_a" required placeholder="Pilihan A">
                 </div>
                 <div class="form-group">
                     <label>Pilihan B *</label>
-                    <input type="text" name="pilihan_b" placeholder="Pilihan B">
+                    <input type="text" name="pilihan_b" required placeholder="Pilihan B">
                 </div>
             </div>
             <div class="form-row">
                 <div class="form-group">
                     <label>Pilihan C *</label>
-                    <input type="text" name="pilihan_c" placeholder="Pilihan C">
+                    <input type="text" name="pilihan_c" required placeholder="Pilihan C">
                 </div>
                 <div class="form-group">
                     <label>Pilihan D *</label>
-                    <input type="text" name="pilihan_d" placeholder="Pilihan D">
+                    <input type="text" name="pilihan_d" required placeholder="Pilihan D">
                 </div>
             </div>
 
@@ -65,41 +71,41 @@
                     <option value="D">D</option>
                 </select>
             </div>
-        </div>
+        </fieldset>
 
-        <div id="form-pdf" style="display: none;">
+        <fieldset id="form-pdf" class="upload-fields" hidden disabled>
             <div class="form-group">
                 <label>File PDF *</label>
-                <input type="file" name="file_pdf" accept=".pdf">
+                <input type="file" name="file_pdf" accept=".pdf,application/pdf" required>
                 <p class="form-hint">Format: .pdf saja, maksimal 10MB</p>
             </div>
-        </div>
+        </fieldset>
 
         <button type="submit" class="btn-login btn-dosen" style="margin-top: 8px;">
-            <i class="fas fa-upload"></i> Unggah Soal
+            <i class="fas fa-upload"></i> Buat misi
         </button>
     </form>
 </div>
 
 <!-- Daftar soal yang sudah diunggah -->
 <div class="soal-card">
-    <h3 style="margin-bottom: 16px; color: var(--text-primary);">Soal Terunggah ({{ soal_list|length }})</h3>
+    <h3 style="margin-bottom: 16px; color: var(--text-primary);">Misi dibuat ({{ soal_list|length }})</h3>
 
     {% if soal_list %}
     <div class="soal-list">
         {% for s in soal_list %}
-        <div class="soal-item">
+        <div class="soal-item" id="misi-{{ s.id }}"><h3>{{ s.judul or s.pertanyaan or s.nama_asli }}</h3>
             <div class="soal-item-header">
                 <span class="soal-mk-badge">{{ s.mata_kuliah }}</span>
-                <span class="soal-type-badge {{ s.tipe }}">{{ 'Pilihan Ganda' if s.tipe == 'pilihan_ganda' else 'PDF' }}</span>
-                <span class="soal-status {{ s.status }}">{{ 'Belum Dikerjakan' if s.status == 'belum_dikerjakan' else 'Sudah Dikerjakan' }}</span>
+                <span class="soal-type-badge {{ s.tipe }}">{{ {'pilihan_ganda':'Pilihan ganda', 'pdf':'PDF', 'tanpa_soal':'Tugas biasa'}.get(s.tipe, s.tipe) }}</span>
+                <a class="text-link" href="{{ url_for('lihat_progres') }}">Lihat progres ↗</a>
             </div>
             {% if s.tipe == 'pilihan_ganda' %}
             <p class="soal-pertanyaan">{{ s.pertanyaan }}</p>
             <div class="soal-jawaban">
                 <i class="fas fa-check-circle"></i> Jawaban benar: <strong>{{ s.jawaban_benar }}</strong>
             </div>
-            {% else %}
+            {% elif s.tipe == 'pdf' %}
             <p class="soal-pertanyaan"><i class="fas fa-file-pdf"></i> {{ s.nama_asli }}</p>
             {% endif %}
             <p class="soal-meta">Diunggah oleh {{ s.unggah_oleh }} · {{ s.tanggal_unggah[:10] }}</p>
@@ -107,15 +113,28 @@
         {% endfor %}
     </div>
     {% else %}
-    <p class="empty-state">Belum ada soal yang diunggah.</p>
+    <p class="empty-state">Belum ada misi. Buat yang pertama, yuk.</p>
     {% endif %}
 </div>
 
 <script>
 function switchTipe() {
     const tipe = document.getElementById('tipe-soal').value;
-    document.getElementById('form-pilihan-ganda').style.display = tipe === 'pilihan_ganda' ? 'block' : 'none';
-    document.getElementById('form-pdf').style.display = tipe === 'pdf' ? 'block' : 'none';
+    const pdf = tipe === 'pdf';
+    const pg = tipe === 'pilihan_ganda';
+    const pilihan = document.getElementById('form-pilihan-ganda');
+    const file = document.getElementById('form-pdf');
+    pilihan.hidden = !pg;
+    pilihan.disabled = !pg;
+    file.hidden = !pdf;
+    file.disabled = !pdf;
 }
+switchTipe();
+const uploadFile = document.querySelector('[name="file_pdf"]');
+uploadFile.addEventListener('change', function () {
+    this.setCustomValidity(this.files[0] && this.files[0].size > 10 * 1024 * 1024
+        ? 'Ukuran PDF maksimal 10 MB. Pilih file yang lebih kecil, ya.' : '');
+    this.reportValidity();
+});
 </script>
 {% endblock %}

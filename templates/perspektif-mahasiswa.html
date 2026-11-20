@@ -15,7 +15,7 @@
     <div class="soal-card {{ 'soal-done' if jawab }}">
         <div class="soal-header">
             <span class="soal-mk-badge">{{ s.mata_kuliah }}</span>
-            <span class="soal-type-badge {{ s.tipe }}">{{ 'PG' if s.tipe == 'pilihan_ganda' else 'PDF' }}</span>
+            <span class="soal-type-badge {{ s.tipe }}">{{ {'pilihan_ganda':'PG', 'pdf':'PDF', 'tanpa_soal':'Tugas'}.get(s.tipe, s.tipe) }}</span>
             <span class="soal-status {{ s.status }}">{{ 'Dikerjakan' if s.status == 'dikerjakan' else 'Belum' }}</span>
         </div>
 
@@ -31,12 +31,12 @@
         <div class="soal-jawaban">
             <i class="fas fa-check-circle"></i> Jawaban benar: <strong>{{ s.jawaban_benar }}</strong>
         </div>
-        {% else %}
-        <p class="soal-pertanyaan"><i class="fas fa-file-pdf"></i> {{ s.nama_asli }}</p>
+        {% elif s.tipe == 'pdf' %}
+        <p class="soal-pertanyaan">{{ s.judul or s.nama_asli }}</p>
         <a href="/static/soal/{{ s.nama_file }}" target="_blank" class="btn-lihat-pdf">
             <i class="fas fa-external-link-alt"></i> Lihat PDF
         </a>
-        {% endif %}
+        {% else %}<h3>{{ s.judul }}</h3><p>{{ s.deskripsi }}</p>{% endif %}
 
         {% if jawab %}
         <div class="jawaban-list" style="margin-top: 12px;">

@@ -99,7 +99,7 @@ class User:
     def add_xp(self, amount: int) -> dict:
         """Menambah XP dan mengembalikan info level-up dan badge."""
         leveled_up = False
-        leveled_up_to = self._level
+        leveled_up_to = self.level
         badges_earned = []
         
         self._total_xp += amount
@@ -118,12 +118,12 @@ class User:
             badges_earned.append("Naik Kelas")
         
         # Cek Pemburu Misi (5 misi selesai)
-        completed_count = len([m for m in self._completed_missions if m.get("status") == "selesai"])
+        completed_count = len([m for m in self._completed_missions if isinstance(m, str) or m.get("status") == "selesai"])
         if completed_count >= 5 and "Pemburu Misi" not in self._badges:
             badges_earned.append("Pemburu Misi")
         
         # Cek Pejuang Ujian (3 misi ujian selesai)
-        ujian_count = len([m for m in self._completed_missions if m.get("jenis") == "ujian" and m.get("status") == "selesai"])
+        ujian_count = len([m for m in self._completed_missions if isinstance(m, dict) and m.get("jenis") == "ujian" and m.get("status") == "selesai"])
         if ujian_count >= 3 and "Pejuang Ujian" not in self._badges:
             badges_earned.append("Pejuang Ujian")
         
