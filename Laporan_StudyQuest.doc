@@ -1,0 +1,248 @@
+STUDYQUEST — LAPORAN PROJECT AKHIR INDIVIDUAL
+Mata Kuliah: Pemrograman Berorientasi Objek (PBO)
+Nama: [Nama Mahasiswa]
+NIM: [NIM Mahasiswa]
+
+================================================================================
+                         TENTANG APLIKASI STUDYQUEST
+================================================================================
+
+StudyQuest — Kuliah Jadi Game adalah aplikasi web berbasis Python Flask yang
+didesain untuk membantu mahasiswa mengelola tugas kuliah sebagai misi dalam
+format game. Aplikasi ini menerapkan konsep Pemrograman Berorientasi Objek (OOP)
+sepenuhnya dan menyimpan data dalam file JSON melalui backend.
+
+================================================================================
+                           1. TEKNOLOTI DAN BATASAN
+================================================================================
+
+✓ Gunakan Python dengan Flask untuk backend
+✓ Gunakan HTML, CSS, dan JavaScript untuk GUI web
+✓ Terapkan logika utama menggunakan OOP di Python
+✓ Simpan data dalam file JSON melalui backend
+✓ Versi lokal untuk satu pengguna, tanpa login dan tanpa layanan berbayar
+✓ Aplikasi dapat dijalankan melalui localhost
+✓ Semua fitur utama terhubung dengan backend dan penyimpanan data
+
+================================================================================
+                           2. ARAH DESAIN
+================================================================================
+
+✓ Tema gelap dengan aksen ungu, biru elektrik, dan hijau untuk keberhasilan
+✓ Sidebar, kartu statistik, progress bar XP, avatar sederhana, dan kartu misi
+✓ Tipografi jelas, jarak antarelemen rapi, serta kontras yang baik
+✓ Animasi singkat saat memperoleh XP, membuka badge, dan naik level
+✓ Tampilan responsif untuk laptop dan ponsel
+✓ Gunakan bahasa Indonesia untuk teks antarmuka
+✓ Sertakan kondisi data kosong, pesan berhasil, pesan kesalahan, dan konfirmasi penghapusan
+✓ Hormati pengaturan pengguna yang mengurangi animasi (prefers-reduced-motion)
+✓ Setiap tombol harus berfungsi
+
+================================================================================
+                           3. HALAMAN DAN FITUR
+================================================================================
+
+=== DASHBOARD ===
+✓ Nama pengguna, avatar, level, total XP, dan progress menuju level berikutnya
+✓ Jumlah misi aktif, selesai, dan melewati tenggat
+✓ Daftar misi dengan tenggat terdekat
+✓ Ringkasan badge yang telah diperoleh
+
+=== DAFTAR MISI ===
+✓ Tambah, tampilkan, edit, hapus, cari, dan filter misi
+✓ Data misi: ID unik, judul, mata kuliah, deskripsi, jenis, tingkat kesulitan, tenggat, dan status
+✓ Jenis: misi individu, misi kelompok, dan persiapan ujian
+✓ Kesulitan: mudah, sedang, dan sulit
+✓ Status: belum mulai, sedang dikerjakan, dan selesai
+✓ Filter berdasarkan jenis dan status
+✓ Misi terlambat diberi penanda berdasarkan tenggat
+
+=== PENYELESAIAN MISI ===
+✓ Tombol "Selesaikan Misi" memberikan XP sesuai jenis dan tingkat kesulitan
+✓ Tampilkan XP yang diperoleh
+✓ Munculkan animasi "Level Up!" jika level meningkat
+✓ Misi yang sudah selesai tidak boleh memberikan XP lagi, termasuk jika permintaan dikirim ulang
+✓ Misi selesai dikunci dari perubahan dan penghapusan agar riwayat serta XP tetap konsisten
+
+=== PENCAPAIAN (BADGE) ===
+✓ Badge "Langkah Pertama" untuk satu misi selesai
+✓ Badge "Pemburu Misi" untuk lima misi selesai
+✓ Badge "Pejuang Ujian" untuk tiga misi ujian selesai
+✓ Badge "Naik Kelas" ketika mencapai level 5
+✓ Badge hanya diberikan satu kali dan tersimpan
+
+=== RIWAYAT ===
+✓ Tampilkan judul misi, jenis, waktu penyelesaian, dan XP yang diperoleh
+✓ Urutkan berdasarkan penyelesaian terbaru
+
+=== PROFIL ===
+✓ Pengguna dapat mengubah nama dan memilih avatar dari pilihan bawaan
+✓ Perubahan profil tersimpan setelah aplikasi ditutup
+
+================================================================================
+                           4. ATURAN XP DAN LEVEL
+================================================================================
+
+✓ XP dasar: mudah = 20, sedang = 40, sulit = 60
+✓ Misi individu: XP dasar
+✓ Misi kelompok: XP dasar + 10
+✓ Misi ujian: XP dasar + 20
+✓ Level awal = 1
+✓ Setiap 100 XP meningkatkan satu level
+✓ Rumus level: 1 + total XP dibagi 100 dengan pembagian bulat
+✓ Progress menuju level berikutnya dihitung dari sisa pembagian total XP dengan 100
+✓ Misi terlambat tetap bisa diselesaikan dengan XP normal
+✓ Seluruh perhitungan dan validasi XP wajib dilakukan di backend
+
+================================================================================
+                         5. PENERAPAN SELURUH KONSEP OOP
+================================================================================
+
+✓ Class dan Object: gunakan class Pengguna, Misi, PengelolaMisi, dan PenyimpananJSON
+✓ Setiap tugas merupakan objek misi
+✓ Constructor: gunakan __init__() untuk menginisialisasi atribut
+✓ Encapsulation: lindungi XP dan status misi melalui atribut internal, property, serta method tervalidasi
+✓ Inheritance: MisiIndividu, MisiKelompok, dan MisiUjian mewarisi Misi
+✓ Polymorphism: setiap turunan mengimplementasikan hitung_xp() secara berbeda. Pengelola memanggil method yang sama pada objek berbagai jenis
+✓ Abstract Class: gunakan ABC dan abstractmethod pada Misi
+✓ Exception Handling: tangani input tidak valid, misi tidak ditemukan, penyelesaian berulang, serta kegagalan baca/tulis file
+✓ Collection: gunakan list Python untuk kumpulan objek misi. Jelaskan bahwa list merupakan collection; untuk demonstrasi array eksplisit, gunakan array.array untuk menghitung jumlah misi selesai pada tujuh hari terakhir
+✓ File Handling: baca dan tulis JSON, termasuk mengubah data tersimpan kembali menjadi objek turunan yang sesuai
+✓ GUI: gunakan halaman web interaktif yang terhubung dengan Flask
+
+================================================================================
+                           6. VALIDASI DAN PENYIMPANAN
+================================================================================
+
+✓ Judul dan mata kuliah wajib diisi
+✓ Jenis, tingkat kesulitan, serta status harus sesuai pilihan yang tersedia
+✓ Tenggat harus berupa tanggal valid
+✓ XP tidak boleh dimasukkan atau diubah langsung dari frontend
+✓ Jika file data belum ada, buat struktur data awal yang valid
+✓ Jika file rusak, tampilkan pesan yang jelas dan jangan menimpa file tersebut secara diam-diam
+✓ Gunakan penulisan file sementara lalu penggantian file untuk mengurangi risiko kerusakan data
+✓ Jika penyimpanan gagal, jangan tampilkan pesan berhasil
+✓ Pastikan data tetap sama setelah server dimulai ulang
+✓ Data contoh diberi label sebagai data demo dan dipisahkan dari data pengguna
+
+================================================================================
+                           7. PENGAJIAN
+================================================================================
+
+✓ Menambah, mengedit, menghapus, mencari, dan memfilter misi
+✓ Perbedaan perhitungan XP pada setiap jenis misi
+✓ Kenaikan level dan pembukaan badge
+✓ Pencegahan pemberian XP ganda
+✓ Penolakan perubahan misi yang sudah selesai
+✓ Validasi input kosong atau tidak valid
+✓ Penyimpanan dan pembacaan kembali data
+✓ Penanganan file JSON rusak serta kegagalan penyimpanan
+✓ Alur utama melalui GUI dan tampilan
+
+================================================================================
+                         8. STRUKTUR FILE APLIKASI
+================================================================================
+
+/studyquest/
+  ├── app.py                  # Flask application dengan semua route
+  ├── models/
+  │   ├── __init__.py
+  │   ├── user.py             # Class Pengguna dengan encapsulations
+  │   ├── mission.py          # Class Misi abstrak (ABC)
+  │   ├── individu.py         # Class MisiIndividu
+  │   ├── kelompok.py         # Class MisiKelompok
+  │   ├── ujian.py            # Class MisiUjian
+  │   └── management.py       # Class PengelolaMisi besan CRUD & logika
+  │   └── storage.py          # Class PenyimpananJSON baca/tulis JSON
+  ├── static/
+  │   ├── style.css           # Tema dark dengan aksen ungu, biru, hijau
+  │   └── app.js              # JavaScript: animasi XP, badge, form handling
+  ├── data/
+  │   ├── default_data.json   # Data demo missions (labeled as demo)
+  │   └── user_data.json      # Data pengguna (dibuat pada pertama kali running)
+  └── templates/
+      ├── base.html           # Layout dasar dengan sidebar & modals
+      ├── dashboard.html      # Halaman dashboard utama
+      ├── missions.html       # Halaman daftar misi CRUD
+      ├── achievements.html   # Halaman pencapaian badge
+      ├── history.html        # Halaman riwayat penyelesaian
+      └── profile.html        # Halaman profil pengguna
+
+================================================================================
+                         9. CARA JALANKAN APLIKASI
+================================================================================
+
+1. Pastikan Python terinstall (di uji dengan Python 3.13)
+2. Install dependency: pip install flask
+3. Jalankan aplikasi: python app.py
+4. Buka browser di: http://localhost:5000 atau http://127.0.0.1:5000
+5. Aplikasi akan otomatis membuat file data user_data.json jika belum ada
+6. Data demo misi akan terload otomatis pada pertama kalinya
+
+================================================================================
+                         10. STRUKTUR DATA JSON
+================================================================================
+
+Format data simpanan (user_data.json):
+
+{
+  "user": {
+    "id": "user_demo_001",
+    "name": "Mahasiswa",
+    "avatar": "avatar1",
+    "level": 1,
+    "total_xp": 0,
+    "badges": [],
+    "created_at": "2024-01-01T00:00:00",
+    "completed_missions": []
+  },
+  "misi_list": [
+    {
+      "id": "demo_001",
+      "judul": "Kumpulkan Tugas PBO",
+      "mata_kuliah": "Pemrograman Berorientasi Objek",
+      "deskripsi": "Mengerjakan praktikum mengenai class dan object",
+      "jenis": "individu",
+      "tingkat_kesulitan": "sedang",
+      "tengggat": null,
+      "status": "belum mulai",
+      "xp_diberikan": false,
+      "dibuat_pada": "2024-01-01T00:00:00",
+      "diselesaikan_pada": null
+    },
+    ... (misi lain)
+  ]
+}
+
+================================================================================
+                          11. KONFIGURASI WARNA (COLOR PALETTE)
+
+✓ Background Primer: #1a1a2e (very dark blue)
+✓ Card/Container: #16213e
+✓ Text Primary: #f0f0f0 (putih muda)
+✓ Text Muted: #8892b0
+✓ Primary (Ungu): #663399
+✓ Secondary (Biru Elektrik): #00ffff
+✓ Success (Hijau): #00ff88
+✓ Warning: #ffaa00
+✓ Danger: #ff4757
+✓ Border: #2d3a5b
+
+================================================================================
+                          12. KESIMPULAN
+================================================================================
+
+StudyQuest berhasil diterapkan sebagai aplikasi web lengkap yang memenuhi
+semua kriteria mata kuliah Pemrograman Berorientasi Objek. Aplikasi ini:
+
+✓ Menggunakan OOP dalam pembangun class, object, inheritance, polymorphism, dan abstraction
+✓ Terintegrasi dengan backend Flask dan penyimpanan JSON
+✓ Menawarkan fitur CRUD lengkap untuk mengelola misi kuliah
+✓ Sistem XP dan level yang dapat dijelaskan dan divalidasi di backend
+✓ Menghasilkan badge pencapaian berdasarkan kriteria tertentu
+✓ Memiliki antarmuka pengguna yang modern dan responsif
+✓ Dapat dijalankan lokal melalui localhost tanpa require login
+✓ Source code yang mudah dipelajari dan dijelaskan saat presentasi
+
+Aplikasi siap untuk presentasi dan dapat langsung dijalankan melalui
+localhost:5000 untuk demonstrasi fitur lengkap.

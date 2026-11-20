@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyQuest - Kuliah Jadi Game</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="avatar-small" id="sidebar-avatar"></div>
+                <h3>StudyQuest</h3>
+                {% if session.get('role') %}
+                <span class="role-badge badge-{{ session.get('role') }}">
+                    {% if session.get('role') == 'dosen' %}Dosen{% else %}Mahasiswa{% endif %}
+                </span>
+                {% endif %}
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#" id="nav-dashboard" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                    {% if session.get('role') == 'dosen' %}
+                    <li><a href="#" id="nav-missions"><i class="fas fa-tasks"></i> Kelola Misi</a></li>
+                    <li><a href="#" id="nav-achievements"><i class="fas fa-trophy"></i> Pencapaian</a></li>
+                    {% else %}
+                    <li><a href="#" id="nav-missions"><i class="fas fa-list"></i> Daftar Misi</a></li>
+                    <li><a href="#" id="nav-achievements"><i class="fas fa-trophy"></i> Pencapaian</a></li>
+                    <li><a href="#" id="nav-history"><i class="fas fa-history"></i> Riwayat</a></li>
+                    <li><a href="#" id="nav-profile"><i class="fas fa-user"></i> Profil</a></li>
+                    {% endif %}
+                    <li class="nav-switch-role"><a href="{{ url_for('ganti_role') }}"><i class="fas fa-exchange-alt"></i> Ganti Role</a></li>
+                </ul>
+            </nav>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            {% with messages = get_flashed_messages() %}
+              {% if messages %}
+                <div class="flash-message">{{ messages[0] }}</div>
+              {% endif %}
+            {% endwith %}
+            
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+    
+    <!-- XP Gain Modal -->
+    <div id="xp-modal" class="modal">
+        <div class="modal-content modal-xp">
+            <div class="xp-gain-amount" id="xp-amount">+0 XP</div>
+            <div class="xp-reason" id="xp-reason"></div>
+            <button class="modal-close" onclick="closeXPModal()">&times;</button>
+        </div>
+    </div>
+    
+    <!-- Level Up Modal -->
+    <div id="levelup-modal" class="modal">
+        <div class="modal-content modal-levelup">
+            <h2>Level Up!</h2>
+            <div class="levelup-info">
+                <span>Level sebelumnya: <strong id="old-level">1</strong></span>
+                <span>Level baru: <strong id="new-level">2</strong></span>
+            </div>
+            <div class="xp-gain" id="levelup-xp">+100 XP</div>
+            <button class="continue-btn" onclick="closeLevelUpModal()">Lanjut</button>
+        </div>
+    </div>
+    
+    <!-- Badge Unlock Modal -->
+    <div id="badge-modal" class="modal">
+        <div class="modal-content modal-badge">
+            <h2>Badge Terbuka!</h2>
+            <div class="badge-icon" id="badge-icon"></div>
+            <div class="badge-name" id="badge-name"></div>
+            <p class="badge-desc" id="badge-desc"></p>
+            <button class="continue-btn" onclick="closeBadgeModal()">Oke</button>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

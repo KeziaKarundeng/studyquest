@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyQuest - Pilih Role</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+    <div class="role-select-page">
+        <div class="role-select-container">
+            <div class="role-select-header">
+                <div class="role-logo">
+                    <i class="fas fa-gamepad"></i>
+                </div>
+                <h1>StudyQuest</h1>
+                <p class="role-subtitle">Kuliah Jadi Game</p>
+                <p class="role-question">Masuk sebagai apa?</p>
+            </div>
+
+            <div class="role-cards">
+                <form method="POST" action="{{ url_for('role_select') }}" class="role-form">
+                    <button type="submit" name="role" value="dosen" class="role-card role-dosen">
+                        <div class="role-icon">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                        </div>
+                        <h2>Dosen</h2>
+                        <p>Buat dan kelola tugas untuk mahasiswa</p>
+                        <span class="role-cta">Masuk sebagai Dosen <i class="fas fa-arrow-right"></i></span>
+                    </button>
+                </form>
+
+                <form method="POST" action="{{ url_for('role_select') }}" class="role-form">
+                    <button type="submit" name="role" value="mahasiswa" class="role-card role-mahasiswa">
+                        <div class="role-icon">
+                            <i class="fas fa-user-graduate"></i>
+                        </div>
+                        <h2>Mahasiswa</h2>
+                        <p>Kerjakan tugas dan kumpulkan XP</p>
+                        <span class="role-cta">Masuk sebagai Mahasiswa <i class="fas fa-arrow-right"></i></span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

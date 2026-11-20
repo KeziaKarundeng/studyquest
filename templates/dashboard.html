@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-grid">
+    
+    <!-- User Info Card -->
+    <div class="user-card">
+        <div class="avatar-large" id="user-avatar-large"></div>
+        <div class="user-info">
+            <h2 id="user-name">{{ user_name or 'Mahasiswa' }}</h2>
+            <div class="user-stats">
+                <div class="stat">
+                    <span class="stat-value" id="user-level">Lvl 1</span>
+                    <span class="stat-label">Level</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" id="user-xp">{{ total_xp or 0 }}</span>
+                    <span class="stat-label">XP</span>
+                </div>
+            </div>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" style="width: {{ progress or 0 }}%"></div>
+        </div>
+        <span class="progress-text">{{ progress or 0 }}% ke level berikutnya</span>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="stats-cards">
+        <div class="stat-card card-active">
+            <div class="card-icon">
+                <i class="fas fa-clipboard-list"></i>
+            </div>
+            <div class="card-value" id="stat-aktif">0</div>
+            <div class="card-label">Misi Aktif</div>
+        </div>
+        <div class="stat-card card-selesai">
+            <div class="card-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="card-value" id="stat-selesai">0</div>
+            <div class="card-label">Misi Selesai</div>
+        </div>
+        <div class="stat-card card-lewat">
+            <div class="card-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="card-value" id="stat-lewat">0</div>
+            <div class="card-label">Lewat Tenggat</div>
+        </div>
+    </div>
+    
+</div>
+
+<!-- Daftar Misi dengan Tenggat Terdekat -->
+<section class="section-card">
+    <h2><i class="fas fa-clock"></i> Misi dengan Tenggat Terdekat</h2>
+    <div class="missions-list" id="misi-terdekat-list">
+        {% if misi_terdekat %}
+        {% for m in misi_terdekat %}
+        <div class="mission-item {{ 'urgent' if m.tenggat and m.tenggat < today else '' }}" data-id="{{ m.id }}">
+            <div class="mission-info">
+                <h4 class="mission-title">{{ m.judul }}</h4>
+                <p class="mission-mata-kuliah">{{ m.mata_kuliah }}</p>
+                <p class="mission-tengggat">Tenggat: {{ m.tenggat or 'Tidak ada' }}</p>
+            </div>
+            <div class="mission-status {{ m.status }}">
+                {{ m.status }}
+            </div>
+            {% if m.status != 'selesai' %}
+            <button class="btn-complete" onclick="completeMission('{{ m.id }}')">Selesaikan</button>
+            {% endif %}
+        </div>
+        {% endfor %}
+        {% else %}
+        <p class="empty-state">Tidak ada misi dengan tenggat terdekat</p>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Ringkasan Badge -->
+<section class="section-card">
+    <h2><i class="fas fa-trophy"></i> Ringkasan Badge</h2>
+    <div class="badges-grid" id="badges-grid">
+        {% for badge_name in ['langkah_pertama', 'pemburu_misi', 'pejuang_ujian', 'naik_kelas'] %}
+        <div class="badge-item {{ 'unlocked' if badge_name in user_badges else '' }}">
+            <div class="badge-icon-small" id="icon-{{ badge_name }}"></div>
+            <span class="badge-label">{{ badge_name | capitalize }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="badges-desc">
+        <p>Total misi selesai: <strong id="total-misi-selesai">{{ stats.selesai }}</strong></p>
+        <p>Level saat ini: <strong id="user-level-display">{{ stats.level }}</strong></p>
+    </div>
+</section>
+
+</main>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2><i class="fas fa-trophy"></i> Pencapaian & Badge</h2>
+
+<div class="achievements-grid">
+    
+    <!-- Badge Items -->
+    {% for badge_key, badge_info in badge_progres.items() %}
+    <div class="badge-card {{ 'unlocked' if badge_info.tercapai else '' }}">
+        <div class="badge-icon-large" id="large-icon-{{ badge_key }}"></div>
+        <h3>{{ badge_key | capitalize }}</h3>
+        <p class="badge-condition">{{ badge_info.kriteria }}</p>
+        {% if not badge_info.tercapai %}
+        <p class="badge-progress">
+            Progress: <span id="badge-progress-{{ badge_key }}">{{ badge_info.progress | default(0) }}%</span>
+        </p>
+        {% endif %}
+    </div>
+    {% endfor %}
+    
+</div>
+
+<!-- User Badges Summary -->
+<div class="user-badges-summary">
+    <h3>Badge Saya</h3>
+    <div class="badges-grid user-grid">
+        {% for badge in user_badges %}
+        <div class="badge-item unlocked">
+            <span class="badge-icon" style="background: #663399;"></span>
+            <span>{{ badge }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    <p>Total: {{ user_badges | length }} badge</p>
+</div>
+
+<!-- Total Progress -->
+<div class="total-progress">
+    <p>Level: <strong id="level-display">{{ level }}</strong></p>
+    <p>XP: <strong id="xp-display">{{ total_xp }}</strong> / 100 per level</p>
+    <div class="progress-bar-small">
+        <div class="progress-fill-small" style="width: {{ progress or 0 }}%"></div>
+    </div>
+    <span>{{ progress or 0 }}% ke level berikutnya</span>
+</div>
+
+<script>
+// Update badge progress bars
+document.addEventListener('DOMContentLoaded', function() {
+    {% for badge_key in badge_progres %}
+    const progress = {{ badge_progres[badge_key].progress | default(0) }};
+    const bar = document.getElementById('badge-progress-{{ badge_key }}');
+    if (bar) {
+        bar.style.width = progress + '%';
+        bar.parentElement.style.display = 'block';
+    }
+    {% endfor %}
+});
+</script>
+{% endblock %}
