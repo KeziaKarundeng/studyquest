@@ -209,6 +209,7 @@ def dashboard():
         user_badges=user.badges,
         role=session.get("role"),
         preview_as_dosen=session.get("preview_as_dosen", False),
+        soal_universal=muat_soal_universal(),
     )
 
 

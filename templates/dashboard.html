@@ -1,14 +1,39 @@
-{% extends "base.html" %}
-{% block content %}
-<header class="page-heading"><div><p class="eyebrow">SEDIKIT PROGRES, SETIAP HARI</p><h1>Halo {{ user_name }}, gas tipis-tipis <span class="wave">✌</span></h1><p>Satu misi dulu. Yang penting jalan.</p></div><span class="heading-doodle" aria-hidden="true">✧</span></header>
-<div class="overview">
-    <section class="xp-strip" aria-label="Progres level"><strong id="user-level">Level {{ level }}</strong><div class="xp-track"><div class="progress-bar" role="progressbar" aria-label="Progres ke level berikutnya" aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100"><div class="progress-fill" style="width: {{ progress }}%"></div></div><span class="progress-text">{{ progress }} / 100 XP ke level berikutnya</span></div><span class="xp-sticker">Dikit lagi naik!</span></section>
-    <div class="stats-cards"><div class="stat-card card-active"><strong class="card-value" id="stat-aktif">{{ stats.aktif }}</strong><span>misi aktif</span></div><div class="stat-card"><strong class="card-value" id="stat-selesai">{{ stats.selesai }}</strong><span>selesai</span></div><div class="stat-card card-lewat"><strong class="card-value" id="stat-lewat">{{ stats.lewat_tenggat }}</strong><span>lewat tenggat</span></div></div>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyQuest - Kuliah Jadi Game</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="app-container">
+<aside class="dashboard-aside">
+    <section class="note-card">
+        <div><h2>Pelan-pelan, kelar juga.</h2><p>Cicil satu misi hari ini.</p></div>
+        <span class="sun-doodle" aria-hidden="true">☼</span>
+    </section>
+    <section class="section-card">
+        <div class="section-title"><h2>Soal Saya</h2><p>Soal yang diunggah dosen</p></div>
+        <div class="badges-grid user-grid">
+            {% if soal_universal %}
+            {% for s in soal_universal %}
+            <div class="badge-item {% if s.status == 'dikerjakan' %} unlocked {% else %} {% endif %}">
+                <span class="badge-medal">{{ s.id[:6] }}</span>
+                <span>{{ s.mata_kuliah }}</span>
+                <span class="badge-lock">{{ 'Belum Dikerjakan' if s.status == 'belum_dikerjakan' else 'Dikerjakan' }}</span>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="badge-item">
+                <span class="badge-medal">—</span>
+                <span>Belum ada soal</span>
+                <span class="badge-lock">—</span>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+</aside>
 </div>
-<div class="dashboard-columns"><section class="mission-section"><div class="section-heading"><h2>Misi yang perlu kamu gas</h2><p>Mulai dari yang paling dekat, yuk.</p></div>
-<div class="filter-chips" role="group" aria-label="Filter jenis misi">{% for jenis in ['semua', 'individu', 'kelompok', 'ujian'] %}<button type="button" class="filter-chip {{ 'active' if jenis == 'semua' }}" data-mission-filter="{{ jenis }}" aria-pressed="{{ 'true' if jenis == 'semua' else 'false' }}">{{ jenis | capitalize }}</button>{% endfor %}</div>
-<div class="missions-list" id="misi-terdekat-list">
-{% for m in misi_terdekat %}<article class="mission-item {{ 'urgent' if m.tenggat and m.tenggat < today else '' }}" data-jenis="{{ m.jenis }}"><div class="mission-info"><span class="deadline">{{ 'Lewat tenggat' if m.tenggat and m.tenggat < today else ('Hari ini' if m.tenggat == today else (m.tenggat.strftime('%d %b') if m.tenggat else 'Tanpa tenggat')) }}</span><h3 class="mission-title">{{ m.judul }}</h3><p class="mission-mata-kuliah">{{ m.mata_kuliah }} · {{ m.jenis | capitalize }}</p></div><span class="xp-pill">+{{ m.hitung_xp() }} XP</span>{% if role == 'dosen' %}<a class="btn-edit" href="{{ url_for('page_missions', edit=m.id) }}">Kelola ↗</a>{% else %}<button class="btn-complete" data-complete-id="{{ m.id }}">Sudah selesai ✓</button>{% endif %}</article>{% else %}<div class="empty-state"><span class="empty-icon">✦</span><h3>Semua beres. Nice!</h3><p>Belum ada misi aktif. Siap buat tantangan berikutnya?</p>{% if role == 'dosen' %}<a href="{{ url_for('page_missions') }}" class="text-link">Buka daftar misi ↗</a>{% endif %}</div>{% endfor %}
-<p id="filter-empty" class="empty-state" hidden>Belum ada misi jenis ini. Coba filter lain, yuk.</p></div>{% if role == 'dosen' %}<a href="{{ url_for('page_missions') }}" class="text-link all-missions">Kelola semua misi ↗</a>{% endif %}</section>
-<aside class="dashboard-aside"><section class="note-card"><div><h2>Pelan-pelan,<br>kelar juga.</h2><p>Cicil satu misi hari ini.</p></div><span class="sun-doodle" aria-hidden="true">☼</span></section><section class="section-card badge-summary"><div class="section-title"><h2>Badge kamu</h2><span>{{ user_badges | length }} dari 4</span></div><div class="badges-grid">{% for name, icon in [('Langkah Pertama','⚑'), ('Pemburu Misi','◎'), ('Pejuang Ujian','✎'), ('Naik Kelas','↗')] %}<div class="badge-item {{ 'unlocked' if name in user_badges }}"><span class="badge-medal">{{ icon if name in user_badges else '♧' }}</span><span class="badge-label">{{ name }}</span><span class="badge-lock">{{ 'Terbuka' if name in user_badges else 'Terkunci' }}</span></div>{% endfor %}</div><a class="text-link" href="{{ url_for('page_achievements') }}">Lihat koleksi ↗</a></section><div class="little-note">✦ Total usahamu: <strong id="user-xp">{{ total_xp }} XP</strong><p>Setiap langkah tetap dihitung.</p></div></aside></div>
-{% endblock %}
+</body>
+</html>
