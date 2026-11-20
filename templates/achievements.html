@@ -8,8 +8,8 @@
     <!-- Badge Items -->
     {% for badge_key, badge_info in badge_progres.items() %}
     <div class="badge-card {{ 'unlocked' if badge_info.tercapai else '' }}">
-        <div class="badge-icon-large" id="large-icon-{{ badge_key }}"></div>
-        <h3>{{ badge_key | capitalize }}</h3>
+        <div class="badge-icon-large" aria-hidden="true" id="large-icon-{{ badge_key }}">✦</div>
+        <h3>{{ badge_key | replace('_', ' ') | title }}</h3>
         <p class="badge-condition">{{ badge_info.kriteria }}</p>
         {% if not badge_info.tercapai %}
         <p class="badge-progress">
@@ -45,17 +45,4 @@
     <span>{{ progress or 0 }}% ke level berikutnya</span>
 </div>
 
-<script>
-// Update badge progress bars
-document.addEventListener('DOMContentLoaded', function() {
-    {% for badge_key in badge_progres %}
-    const progress = {{ badge_progres[badge_key].progress | default(0) }};
-    const bar = document.getElementById('badge-progress-{{ badge_key }}');
-    if (bar) {
-        bar.style.width = progress + '%';
-        bar.parentElement.style.display = 'block';
-    }
-    {% endfor %}
-});
-</script>
 {% endblock %}

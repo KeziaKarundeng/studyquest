@@ -7,7 +7,7 @@
 <div class="filter-controls">
     <div class="filter-group">
         <label>Filter Jenis:</label>
-        <select id="filter-jenis" on="change: filterMisi">
+        <select id="filter-jenis" >
             <option value="semua">Semua Jenis</option>
             <option value="individu">Individu</option>
             <option value="kelompok">Kelompok</option>
@@ -16,10 +16,10 @@
     </div>
     <div class="filter-group">
         <label>Filter Status:</label>
-        <select id="filter-status" on="change: filterMisi">
+        <select id="filter-status" >
             <option value="semua">Semua Status</option>
-            <option value="belum_mulai">Belum Mulai</option>
-            <option value="sedang_dikerjakan">Sedang Dikerjakan</option>
+            <option value="belum mulai">Belum Mulai</option>
+            <option value="sedang dikerjakan">Sedang Dikerjakan</option>
             <option value="selesai">Selesai</option>
         </select>
     </div>
@@ -60,19 +60,19 @@
                 <td>
                     <span class="status-badge {{ m.status }}">{{ m.status }}</span>
                 </td>
-                <td>{{ m.tengggat or 'Tidak ada' }}</td>
+                <td>{{ m.tenggat or 'Tidak ada' }}</td>
                 <td>
                     {% if m.status != 'selesai' %}
-                    <button class="btn-action btn-complete" onclick="completeMission('{{ m.id }}')">Selesaikan</button>
-                    <button class="btn-action btn-edit" onclick="editMission('{{ m.id }}')">Edit</button>
-                    <button class="btn-action btn-hapus" onclick="deleteMission('{{ m.id }}')">Hapus</button>
+                    <button class="btn-action btn-complete" data-complete-id="{{ m.id }}">Selesaikan</button>
+                    <button class="btn-action btn-edit" data-edit-id="{{ m.id }}">Edit</button>
+                    <button class="btn-action btn-hapus" data-delete-id="{{ m.id }}">Hapus</button>
                     {% endif %}
                 </td>
             </tr>
             {% endfor %}
             {% else %}
             <tr>
-                <td colspan="8" class="empty-state">Tidak ada misi. Tambah misi pertama Anda!</td>
+                <td colspan="8" class="empty-state">Belum ada misi. Yuk, buat yang pertama!</td>
             </tr>
             {% endif %}
         </tbody>
@@ -127,82 +127,4 @@
     </form>
 </div>
 
-<script>
-function filterMisi() {
-    const jenis = document.getElementById('filter-jenis').value;
-    const status = document.getElementById('filter-status').value;
-    const cari = document.getElementById('search-misi').value;
-    
-    // Kirim ke server via AJAX
-    fetch('/api/missions?jenis=' + jenis + '&status=' + status + '&cari=' + encodeURIComponent(cari))
-        .then(response => response.json())
-        .then(data => {
-            const tbody = document.getElementById('missions-table-body');
-            tbody.innerHTML = '';
-            
-            data.misi.forEach((m, index) => {
-                const tr = document.createElement('tr');
-                tr.className = 'mission-row';
-                tr.setAttribute('data-id', m.id);
-                tr.setAttribute('data-jenis', m.jenis);
-                tr.setAttribute('data-status', m.status);
-                tr.innerHTML = `
-                    <td>${index + 1}</td>
-                    <td><strong>${m.judul}</strong></td>
-                    <td>${m.mata_kuliah}</td>
-                    <td><span class="badge-badge ${m.jenis}">${m.jenis}</span></td>
-                    <td><span class="badge-${m.tingkat_kesulitan}">${m.tingkat_kesulitan}</span></td>
-                    <td><span class="status-badge ${m.status}">${m.status}</span></td>
-                    <td>${m.tengggat || 'Tidak ada'}</td>
-                    <td>
-                        <button class="btn-action btn-complete" onclick="completeMission('${m.id}')">Selesaikan</button>
-                        <button class="btn-action btn-edit" onclick="editMission('${m.id}')">Edit</button>
-                        <button class="btn-action btn-hapus" onclick="deleteMission('${m.id}')">Hapus</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        });
-}
-
-function completeMission(id) {
-    if(confirm("Yakini ingin menyelesaikan misi ini?")) {
-        fetch('/api/missions/' + id + '/complete', { method: 'POST' })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'sukses') {
-                    alert(data.data.pesan);
-                    filterMisi();
-                    updateDashboard();
-                } else {
-                    alert(data.pesan);
-                }
-            });
-    }
-}
-
-function editMission(id) {
-    // Arahkan ke form dengan data yang sudah diisi
-    window.location.href = '/missions?edit=' + id;
-}
-
-function deleteMission(id) {
-    if(confirm("Yakin menghapus misi ini? Misi yang sudah selesai tidak bisa dihapus.")) {
-        fetch('/api/missions/' + id, { method: 'DELETE' })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'sukses') {
-                    alert(data.data.pesan);
-                    filterMisi();
-                    updateDashboard();
-                } else {
-                    alert(data.pesan);
-                }
-            });
-    }
-}
-
-// Initialize: load missions
-filterMisi();
-</script>
 {% endblock %}

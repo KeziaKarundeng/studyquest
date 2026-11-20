@@ -1,5 +1,6 @@
 """Flask Application: StudyQuest - Kuliah Jadi Game"""
 import os
+from datetime import date
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session
 from models.user import User
 from models.management import PengelolaMisi
@@ -161,6 +162,7 @@ def dashboard():
         'level': user.level
     }
     return render_template("dashboard.html",
+        today=date.today(),
         user_name=session.get("user_name", user.name),
         user_avatar=user.avatar,
         total_xp=user.total_xp,
@@ -228,6 +230,7 @@ def tambah_mission():
             tingkat_kesulitan=data.get("tingkat_kesulitan", "mudah"),
             tenggat=data.get("tengggat"),
         )
+        penyimpanan.tulis_data(pengelola)
         return jsonify({"status": "sukses", "data": misi_result}), 201
     except ValueError as e:
         return jsonify({"status": "error", "pesan": str(e)}), 400
@@ -253,6 +256,7 @@ def edit_mission(misi_id):
             tenggat=data.get("tengggat"),
             status=data.get("status"),
         )
+        penyimpanan.tulis_data(pengelola)
         return jsonify({"status": "sukses", "data": result}), 200
     except ValueError as e:
         return jsonify({"status": "error", "pesan": str(e)}), 400
@@ -264,7 +268,8 @@ def complete_mission(misi_id):
     pengelola = penyimpanan.baca_data()
     
     try:
-        result = pengelola.selesaikan_misi(misi_id)
+        result = pengelola.selesaikan_misu(misi_id)
+        penyimpanan.tulis_data(pengelola)
         return jsonify({"status": "sukses", "data": result}), 200
     except ValueError as e:
         return jsonify({"status": "error", "pesan": str(e)}), 400
@@ -277,6 +282,7 @@ def hapus_mission(misi_id):
     
     try:
         result = pengelola.hapus_misu(misi_id)
+        penyimpanan.tulis_data(pengelola)
         return jsonify({"status": "sukses", "data": result}), 200
     except ValueError as e:
         return jsonify({"status": "error", "pesan": str(e)}), 400
@@ -415,7 +421,7 @@ def page_missions():
         return redirect(url_for("login"))
     if session.get("role") != "dosen":
         return redirect(url_for("dashboard"))
-    return render_template("missions.html")
+    return render_template("missions.html", misi_list=penyimpanan.baca_data()._misi_list)
 
 @app.route("/achievements")
 def page_achievements():

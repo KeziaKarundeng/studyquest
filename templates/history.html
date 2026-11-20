@@ -23,35 +23,6 @@
     {% endif %}
 </div>
 
-<p class="small-text">Diterurut berdasarkan penyelesaian terbaru</p>
+<p class="small-text">Diurutkan berdasarkan penyelesaian terbaru</p>
 
-<script>
-function loadHistory() {
-    fetch('/api/history')
-        .then(response => response.json())
-        .then(data => {
-            const list = document.getElementById('history-list');
-            list.innerHTML = '';
-            
-            data.history.forEach((h, index) => {
-                const div = document.createElement('div');
-                div.className = 'history-item';
-                div.innerHTML = `
-                    <div class="history-info">
-                        <h4>${h.judul}</h4>
-                        <p><strong>Jenis:</strong> ${h.jenis}</p>
-                        <p><strong>Kesulitan:</strong> ${h.tingkat_kesulitan}</p>
-                        <p><strong>XP Dapat:</strong> ${h.xp_dapat} XP</p>
-                    </div>
-                    <div class="history-time">
-                        <p><strong>Selesai:</strong> ${h.w_selesai || 'Tidak tercatat'}</p>
-                    </div>
-                `;
-                list.appendChild(div);
-            });
-        });
-}
-
-document.addEventListener('DOMContentLoaded', loadHistory);
-</script>
 {% endblock %}

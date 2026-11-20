@@ -1,241 +1,75 @@
-// StudyQuest JavaScript - Fungsi Interaktif untuk Aplikasi Web
-
-// Cek preferensi reduced motion (hormi pengaturan pengguna)
-const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-// Fungsi bantuan untuk animasi (matikan jika reduced motion)
-function animateElement(element, animationName, duration = 0.5) {
-    if (prefersReducedMotion) {
-        element.style.opacity = 1;
-        element.style.transform = '';
-        return;
+// Navigation uses normal links so every page initializes reliably and supports back/forward.
+const $ = selector => document.querySelector(selector);
+function closeXPModal(){ $('#xp-modal').classList.remove('active'); }
+function closeLevelUpModal(){ $('#levelup-modal').classList.remove('active'); }
+function closeBadgeModal(){ $('#badge-modal').classList.remove('active'); }
+function showXPModal(amount,reason){$('#xp-amount').textContent=`+${amount} XP`;$('#xp-reason').textContent=reason;$('#xp-modal').classList.add('active');}
+async function api(url,options={}){
+    const response=await fetch(url,options);
+    const data=await response.json();
+    if(!response.ok || data.status==='error') throw new Error(data.pesan || 'Belum berhasil. Coba lagi, yuk.');
+    return data;
+}
+function feedback(message,error=false){
+    let el=$('#action-feedback');
+    if(!el){el=document.createElement('div');el.id='action-feedback';el.setAttribute('role','status');$('.main-content').prepend(el);}
+    el.className='form-feedback'+(error?' error':'');el.textContent=message;
+}
+document.addEventListener('click',async event=>{
+    const filter=event.target.closest('[data-mission-filter]');
+    if(filter){
+        document.querySelectorAll('[data-mission-filter]').forEach(button=>{const active=button===filter;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));});
+        let visible=0;document.querySelectorAll('.mission-item[data-jenis]').forEach(card=>{card.hidden=filter.dataset.missionFilter!=='semua' && card.dataset.jenis!==filter.dataset.missionFilter;if(!card.hidden) visible++;});
+        $('#filter-empty').hidden=visible>0;return;
     }
-    
-    element.style.animation = `${animationName} ${duration}s ease`;
-    setTimeout(() => {
-        element.style.animation = '';
-    }, duration * 1000);
-}
-
-// Tampilkan modal XP Gain
-function showXPModal(amount, reason) {
-    const modal = document.getElementById('xp-modal');
-    const xpAmount = document.getElementById('xp-amount');
-    const xpReason = document.getElementById('xp-reason');
-    
-    xpAmount.textContent = `+${amount} XP`;
-    xpReason.textContent = reason || 'Misi berhasil';
-    
-    modal.classList.add('active');
-    
-    // Otomatis tutup setelah 2 detik
-    setTimeout(closeXPModal, 2000);
-}
-
-// Tutup modal XP
-function closeXPModal() {
-    const modal = document.getElementById('xp-modal');
-    modal.classList.remove('active');
-}
-
-// Tampilkan modal Level Up
-function showLevelUpModal(oldLevel, newLevel, xpGained) {
-    const modal = document.getElementById('levelup-modal');
-    const oldLevelEl = document.getElementById('old-level');
-    const newLevelEl = document.getElementById('new-level');
-    const levelupXp = document.getElementById('levelup-xp');
-    
-    oldLevelEl.textContent = oldLevel;
-    newLevelEl.textContent = newLevel;
-    levelupXp.textContent = `+${xpGained} XP`;
-    
-    modal.classList.add('active');
-}
-
-// Tutup modal Level Up
-function closeLevelUpModal() {
-    const modal = document.getElementById('levelup-modal');
-    modal.classList.remove('active');
-}
-
-// Tampilkan modal Badge Unlock
-function showBadgeModal(badgeName, badgeDesc, iconClass) {
-    const modal = document.getElementById('badge-modal');
-    const badgeIcon = document.getElementById('badge-icon');
-    const badgeNameEl = document.getElementById('badge-name');
-    const badgeDescEl = document.getElementById('badge-desc');
-    
-    badgeIcon.innerHTML = `<span class="fas ${iconClass}" style="color: var(--secondary);"></span>`;
-    badgeNameEl.textContent = badgeName;
-    badgeDescEl.textContent = badgeDesc;
-    
-    modal.classList.add('active');
-}
-
-// Tutup modal Badge
-function closeBadgeModal() {
-    const modal = document.getElementById('badge-modal');
-    modal.classList.remove('active');
-}
-
-// Update dashboard setelah perubahan
-function updateDashboard() {
-    // Refresh data dari server
-    fetch('/dashboard')
-        .then(response => response.json())
-        .then(data => {
-            // Update UI elements
-            if (data.user) {
-                const user = data.user;
-                
-                // Update level dan progress
-                const levelEl = document.getElementById('user-level');
-                const xpEl = document.getElementById('user-xp');
-                const progressFill = document.querySelector('.progress-fill');
-                const progressText = document.querySelector('.progress-text');
-                
-                if (levelEl) levelEl.textContent = `Lvl ${user.level}`;
-                if (xpEl) xpEl.textContent = user.total_xp || 0;
-                if (progressFill) progressFill.style.width = (user.progress || 0) + '%';
-                if (progressText) progressText.textContent = `${user.progress || 0}% ke level berikutnya`;
-            }
-            
-            // Update stats
-            if (data.stats) {
-                const stats = data.stats;
-                document.getElementById('stat-aktif').textContent = stats.aktif;
-                document.getElementById('stat-selesai').textContent = stats.selesai;
-                document.getElementById('stat-lewat').textContent = stats.lewat_tengggat;
-            }
-            
-            // Update misi terdekat
-            if (data.misi_terdekat) {
-                const listEl = document.getElementById('misi-terdekat-list');
-                listEl.innerHTML = '';
-                data.misi_terdekat.forEach(m => {
-                    const div = document.createElement('div');
-                    div.className = `mission-item ${m.status !== 'selesai' ? '' : ''}`;
-                    div.setAttribute('data-id', m.id);
-                    div.innerHTML = `
-                        <div class="mission-info">
-                            <h4 class="mission-title">${m.judul}</h4>
-                            <p class="mission-mata-kuliah">${m.mata_kuliah}</p>
-                            <p class="mission-tengggat">Tenggat: ${m.tengggat || 'Tidak ada'}</p>
-                        </div>
-                        <div class="mission-status ${m.status}">${m.status}</div>
-                        ${m.status !== 'selesai' ? `<button class="btn-complete" onclick="completeMission('${m.id}')">Selesaikan</button>` : ''}
-                    `;
-                    listEl.appendChild(div);
-                });
-            }
-            
-            // Update badge grid
-            if (data.badges !== undefined) {
-                const badgesGrid = document.getElementById('badges-grid');
-                // ... update badge items
-            }
-        });
-}
-
-// Update profil UI
-function updateProfileUI(name, avatar) {
-    const previewAvatar = document.getElementById('preview-avatar');
-    const previewName = document.getElementById('preview-name');
-    
-    if (previewAvatar) {
-        previewAvatar.className = 'preview-avatar ' + avatar;
-    }
-    if (previewName) {
-        previewName.textContent = name || 'Mahasiswa';
-    }
-}
-
-// Event listeners untuk modals
-document.addEventListener('DOMContentLoaded', function() {
-    // Close modals on background click
-    ['xp-modal', 'levelup-modal', 'badge-modal'].forEach(id => {
-        const modal = document.getElementById(id);
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) {
-                modal.classList.remove('active');
-            }
-        });
-    });
-    
-    // Keyboard shortcut: Esc to close modals
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            ['xp-modal', 'levelup-modal', 'badge-modal'].forEach(id => {
-                const modal = document.getElementById(id);
-                modal.classList.remove('active');
-            });
-        }
-    });
+    const complete=event.target.closest('[data-complete-id]');
+    const remove=event.target.closest('[data-delete-id]');
+    const edit=event.target.closest('[data-edit-id]');
+    if(edit){window.location.href='/missions?edit='+encodeURIComponent(edit.dataset.editId);return;}
+    if(!complete && !remove)return;
+    if(remove && !confirm('Hapus misi ini?'))return;
+    if(complete && !confirm('Misi ini sudah beres? Tandai selesai dan ambil XP-mu.'))return;
+    const button=complete || remove;button.disabled=true;
+    try{
+        const id=complete?complete.dataset.completeId:remove.dataset.deleteId;
+        const result=await api('/api/missions/'+encodeURIComponent(id)+(complete?'/complete':''),{method:complete?'POST':'DELETE'});
+        if(complete){
+            showXPModal(result.data.xp_diberikan,result.data.pesan);
+            const close=()=>window.location.reload();
+            $('#xp-modal').addEventListener('click',close,{once:true});
+            document.addEventListener('keydown',e=>{if(e.key==='Escape')close();},{once:true});
+            setTimeout(close,1800);
+        }else window.location.reload();
+    }catch(error){feedback(error.message,true);button.disabled=false;}
 });
-
-// Load page content via AJAX - hanya ambil isi main-content dari response
-function loadPageContent(page) {
-    const contentMap = {
-        'dashboard': '/dashboard',
-        'missions': '/missions',
-        'cek-soal': '/cek-soal',
-        'achievements': '/achievements',
-        'history': '/history',
-        'profile': '/profile'
-    };
-    
-    const target = contentMap[page];
-    if (!target) return;
-    
-    fetch(target)
-        .then(response => {
-            if (!response.ok) throw new Error('Network response was not ok');
-            return response.text();
-        })
-        .then(html => {
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            const fetchedContent = doc.querySelector('.main-content');
-            const mainContent = document.querySelector('.main-content');
-            if (fetchedContent && mainContent) {
-                mainContent.innerHTML = fetchedContent.innerHTML;
-                document.dispatchEvent(new Event('page-loaded'));
-            }
-        })
-        .catch(error => {
-            console.error(`Gagal memuat halaman ${page}:`, error);
-            const mainContent = document.querySelector('.main-content');
-            if (mainContent) {
-                mainContent.innerHTML = `<p>Gagal memuat halaman ${page}</p>`;
-            }
-        });
+document.querySelectorAll('.modal').forEach(modal=>modal.addEventListener('click',event=>{if(event.target===modal)modal.classList.remove('active');}));
+document.addEventListener('keydown',event=>{if(event.key==='Escape')document.querySelectorAll('.modal').forEach(modal=>modal.classList.remove('active'));});
+// Filter existing rows without injecting user-supplied HTML.
+function filterMisi(){
+    const jenis=$('#filter-jenis').value,status=$('#filter-status').value,search=$('#search-misi').value.toLocaleLowerCase('id');
+    document.querySelectorAll('.mission-row').forEach(row=>{row.hidden=(jenis!=='semua' && row.dataset.jenis!==jenis)||(status!=='semua' && row.dataset.status!==status)||!row.cells[1].textContent.toLocaleLowerCase('id').includes(search);});
+    const body=$('#missions-table-body');let empty=$('#search-empty');
+    const rows=[...body.querySelectorAll('.mission-row')];
+    if(rows.length && rows.every(row=>row.hidden)){
+        if(!empty){empty=document.createElement('tr');empty.id='search-empty';const cell=document.createElement('td');cell.colSpan=8;cell.className='empty-state';cell.textContent='Belum ketemu. Coba kata kunci atau filter lain.';empty.append(cell);body.append(empty);}
+    }else if(empty)empty.remove();
 }
-
-// Handle sidebar navigation
-document.querySelectorAll('.sidebar nav ul li a').forEach(link => {
-    if (link.getAttribute('href') !== '#') return; // Lewati link non-AJAX (mis. Ganti Role)
-    link.addEventListener('click', function(e) {
-        e.preventDefault();
-        document.querySelectorAll('.sidebar nav ul li a').forEach(l => l.classList.remove('active'));
-        this.classList.add('active');
-        const linkId = this.getAttribute('id');
-        const pageMap = {
-            'nav-dashboard': 'dashboard',
-            'nav-missions': 'missions',
-            'nav-cek-soal': 'cek-soal',
-            'nav-achievements': 'achievements',
-            'nav-history': 'history',
-            'nav-profile': 'profile'
-        };
-        const page = pageMap[linkId];
-        if (page) loadPageContent(page);
+['filter-jenis','filter-status','search-misi'].forEach(id=>{const input=document.getElementById(id);if(input)input.addEventListener('input',filterMisi);});
+const missionForm=$('#mission-form');
+if(missionForm){
+    const editId=new URLSearchParams(window.location.search).get('edit');
+    if(editId){
+        api('/api/missions').then(data=>{
+            const mission=data.misi.find(m=>m.id===editId);if(!mission)throw new Error('Misi tidak ditemukan.');
+            $('#misi-id').value=editId;
+            for(const [key,value] of Object.entries(mission)){const input=missionForm.elements.namedItem(key==='tenggat'?'tengggat':key);if(input)input.value=value || '';}
+            $('.add-mission-form h3').textContent='Edit misi kamu';missionForm.scrollIntoView({block:'start'});
+        }).catch(error=>feedback(error.message,true));
+    }
+    missionForm.addEventListener('submit',async event=>{
+        event.preventDefault();const button=missionForm.querySelector('[type=submit]');button.disabled=true;
+        const id=$('#misi-id').value;
+        try{await api('/api/missions'+(id?'/'+encodeURIComponent(id):''),{method:id?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.fromEntries(new FormData(missionForm)))});window.location.href='/missions';}
+        catch(error){feedback(error.message,true);button.disabled=false;}
     });
-});
-
-// Disable animations if user prefers reduced motion
-if (prefersReducedMotion) {
-    console.log('Animasi dinonaktifkan sesuai pengaturan pengguna');
-    const style = document.createElement('style');
-    style.textContent = '* { animation: none !important; transition: none !important; }';
-    document.head.appendChild(style);
 }

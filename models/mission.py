@@ -16,7 +16,7 @@ class Misi(ABC):
         self._deskripsi = deskripsi
         self._jenis = jenis
         self._tingkat_kesulitan = tingkat_kesulitan
-        self._tenggat = tenggat
+        self.tenggat = tenggat
         self._status = status
         self._dibuat_pada = datetime.now().isoformat()
         self._diselesaikan_pada = None
@@ -87,7 +87,7 @@ class Misi(ABC):
         return self._tenggat
     
     def _set_tenggat(self, value):
-        if value is None:
+        if value is None or value == "":
             self._tenggat = None
         else:
             try:

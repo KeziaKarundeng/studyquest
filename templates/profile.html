@@ -25,7 +25,7 @@
     <button type="submit" class="btn-submit">Simpan Perubahan</button>
 </form>
 
-<div class-profile-preview" id="profile-preview">
+<div class="profile-preview" id="profile-preview">
     <div class="preview-avatar" id="preview-avatar"></div>
     <span id="preview-name">Mahasiswa</span>
 </div>
@@ -69,10 +69,10 @@ document.getElementById('profile-form').addEventListener('submit', function(e) {
     .then(response => response.json())
     .then(data => {
         if (data.status === 'sukses') {
-            alert('Profil berhasil disimpan!');
+            feedback('Profil tersimpan. Makin kamu banget!');
             updatePreview(name, avatar);
         } else {
-            alert('Error: ' + data.pesan);
+            feedback(data.pesan, true);
         }
     });
 });

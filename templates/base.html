@@ -8,40 +8,24 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- Sidebar -->
         <aside class="sidebar">
-            <div class="sidebar-header">
-                <div class="avatar-small" id="sidebar-avatar"></div>
-                <h3>StudyQuest</h3>
-                {% if session.get('role') %}
-                <span class="role-badge badge-{{ session.get('role') }}">
-                    {% if session.get('role') == 'dosen' %}Dosen{% else %}Mahasiswa{% endif %}
-                    {% if session.get('preview_as_dosen') %}(Preview){% endif %}
-                </span>
-                <div class="sidebar-user">{{ session.get('user_name', '') }}</div>
+            <a class="brand" href="{{ url_for('dashboard') }}"><span class="brand-star">✦</span> StudyQuest</a>
+            <p class="brand-caption">UNIMA · student space</p>
+            <nav aria-label="Menu utama"><ul>
+            {% for endpoint, icon, label in [('dashboard', '⌂', 'Beranda'), ('page_missions', '☑', 'Kelola misi' if session.get('role') == 'dosen' else 'Misi kamu'), ('page_cek_soal', '✎', 'Cek soal'), ('page_achievements', '✺', 'Koleksi badge'), ('page_history', '◷', 'Riwayat'), ('page_profile', '☺', 'Profil')] %}
+                {% if (endpoint != 'page_missions' or session.get('role') == 'dosen') and (session.get('role') != 'dosen' or endpoint not in ['page_history', 'page_profile', 'page_cek_soal']) %}
+                <li><a href="{{ url_for(endpoint) }}" class="{{ 'active' if request.endpoint == endpoint else '' }}" {% if request.endpoint == endpoint %}aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">{{ icon }}</span>{{ label }}</a></li>
                 {% endif %}
+            {% endfor %}
+            </ul></nav>
+            <div class="sidebar-account-actions">
+                {% if session.get('role') == 'dosen' or session.get('preview_as_dosen') %}
+                <a href="{{ url_for('ganti_role') }}">{{ 'Kembali ke dosen' if session.get('preview_as_dosen') else 'Lihat sebagai mahasiswa' }} ↗</a>
+                {% endif %}
+                <a href="{{ url_for('logout') }}">Keluar ↗</a>
             </div>
-            <nav>
-                <ul>
-                    <li><a href="#" id="nav-dashboard" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-                    {% if session.get('role') == 'dosen' %}
-                    <li><a href="#" id="nav-missions"><i class="fas fa-tasks"></i> Kelola Misi</a></li>
-                    <li><a href="#" id="nav-achievements"><i class="fas fa-trophy"></i> Pencapaian</a></li>
-                    <li class="nav-switch-role"><a href="{{ url_for('ganti_role') }}"><i class="fas fa-user-graduate"></i> Lihat sebagai Mahasiswa</a></li>
-                    {% else %}
-                    <li><a href="#" id="nav-cek-soal"><i class="fas fa-file-alt"></i> Cek Soal</a></li>
-                    <li><a href="#" id="nav-achievements"><i class="fas fa-trophy"></i> Pencapaian</a></li>
-                    <li><a href="#" id="nav-history"><i class="fas fa-history"></i> Riwayat</a></li>
-                    <li><a href="#" id="nav-profile"><i class="fas fa-user"></i> Profil</a></li>
-                    {% if session.get('preview_as_dosen') %}
-                    <li class="nav-switch-role"><a href="{{ url_for('ganti_role') }}"><i class="fas fa-chalkboard-teacher"></i> Kembali ke Dosen</a></li>
-                    {% endif %}
-                    {% endif %}
-                    <li class="nav-logout"><a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
-                </ul>
-            </nav>
+            <div class="sidebar-footer"><span class="avatar-small">☺</span><div><strong>{{ session.get('role', 'mahasiswa') | capitalize }}</strong><p>{{ session.get('user_name', '') }}{{ ' · Preview' if session.get('preview_as_dosen') else '' }}</p></div></div>
         </aside>
-        
         <!-- Main Content -->
         <main class="main-content">
             {% with messages = get_flashed_messages() %}
@@ -50,6 +34,7 @@
               {% endif %}
             {% endwith %}
             
+            <div class="breadcrumb"><span>StudyQuest</span> / {{ {"dashboard": "Beranda", "page_missions": "Misi kamu", "page_achievements": "Koleksi badge", "page_history": "Riwayat", "page_profile": "Profil", "page_cek_soal": "Cek soal"}.get(request.endpoint, "Beranda") }}</div>
             {% block content %}{% endblock %}
         </main>
     </div>

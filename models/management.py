@@ -246,7 +246,7 @@ class PengelolaMisi:
     
     def get_statistik(self) -> dict:
         """Mengembalikan statistik misi: aktif, selesai, lewat tenggat."""
-        aktif = len(self.filter_status("belum mulai"))
+        aktif = len([m for m in self._misi_list if m.status != "selesai"])
         selesai = len(self.filter_status("selesai"))
         
         # Cek lewat tenggat (tenggat sudah lewat dari hari ini)
