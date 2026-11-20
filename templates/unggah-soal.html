@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>⇪ Unggah Soal</h2>
+<p class="soal-subtitle">Unggah soal pilihan ganda atau file PDF untuk mahasiswa</p>
+
+{% if error %}
+<div class="login-error"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+{% endif %}
+{% if success %}
+<div class="soal-success"><i class="fas fa-check-circle"></i> {{ success }}</div>
+{% endif %}
+
+<div class="soal-card" style="margin-bottom: 24px;">
+    <h3 style="margin-bottom: 16px; color: var(--text-primary);">Form Unggah Soal</h3>
+
+    <form method="POST" action="{{ url_for('unggah_soal') }}" id="form-unggah">
+        <div class="form-group">
+            <label>Mata Kuliah *</label>
+            <input type="text" name="mata_kuliah" placeholder="Contoh: Pemrograman Berorientasi Objek" required>
+        </div>
+
+        <div class="form-group">
+            <label>Tipe Soal *</label>
+            <select name="tipe" id="tipe-soal" onchange="switchTipe()">
+                <option value="pilihan_ganda">Pilihan Ganda</option>
+                <option value="pdf">File PDF</option>
+            </select>
+        </div>
+
+        <div id="form-pilihan-ganda">
+            <div class="form-group">
+                <label>Pertanyaan *</label>
+                <textarea name="pertanyaan" rows="3" placeholder="Tulis pertanyaan..."></textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Pilihan A *</label>
+                    <input type="text" name="pilihan_a" placeholder="Pilihan A">
+                </div>
+                <div class="form-group">
+                    <label>Pilihan B *</label>
+                    <input type="text" name="pilihan_b" placeholder="Pilihan B">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Pilihan C *</label>
+                    <input type="text" name="pilihan_c" placeholder="Pilihan C">
+                </div>
+                <div class="form-group">
+                    <label>Pilihan D *</label>
+                    <input type="text" name="pilihan_d" placeholder="Pilihan D">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Jawaban Benar *</label>
+                <select name="jawaban_benar" required>
+                    <option value="">-- Pilih Jawaban --</option>
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="C">C</option>
+                    <option value="D">D</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="form-pdf" style="display: none;">
+            <div class="form-group">
+                <label>File PDF *</label>
+                <input type="file" name="file_pdf" accept=".pdf">
+                <p class="form-hint">Format: .pdf saja, maksimal 10MB</p>
+            </div>
+        </div>
+
+        <button type="submit" class="btn-login btn-dosen" style="margin-top: 8px;">
+            <i class="fas fa-upload"></i> Unggah Soal
+        </button>
+    </form>
+</div>
+
+<!-- Daftar soal yang sudah diunggah -->
+<div class="soal-card">
+    <h3 style="margin-bottom: 16px; color: var(--text-primary);">Soal Terunggah ({{ soal_list|length }})</h3>
+
+    {% if soal_list %}
+    <div class="soal-list">
+        {% for s in soal_list %}
+        <div class="soal-item">
+            <div class="soal-item-header">
+                <span class="soal-mk-badge">{{ s.mata_kuliah }}</span>
+                <span class="soal-type-badge {{ s.tipe }}">{{ 'Pilihan Ganda' if s.tipe == 'pilihan_ganda' else 'PDF' }}</span>
+                <span class="soal-status {{ s.status }}">{{ 'Belum Dikerjakan' if s.status == 'belum_dikerjakan' else 'Sudah Dikerjakan' }}</span>
+            </div>
+            {% if s.tipe == 'pilihan_ganda' %}
+            <p class="soal-pertanyaan">{{ s.pertanyaan }}</p>
+            <div class="soal-jawaban">
+                <i class="fas fa-check-circle"></i> Jawaban benar: <strong>{{ s.jawaban_benar }}</strong>
+            </div>
+            {% else %}
+            <p class="soal-pertanyaan"><i class="fas fa-file-pdf"></i> {{ s.nama_asli }}</p>
+            {% endif %}
+            <p class="soal-meta">Diunggah oleh {{ s.unggah_oleh }} · {{ s.tanggal_unggah[:10] }}</p>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="empty-state">Belum ada soal yang diunggah.</p>
+    {% endif %}
+</div>
+
+<script>
+function switchTipe() {
+    const tipe = document.getElementById('tipe-soal').value;
+    document.getElementById('form-pilihan-ganda').style.display = tipe === 'pilihan_ganda' ? 'block' : 'none';
+    document.getElementById('form-pdf').style.display = tipe === 'pdf' ? 'block' : 'none';
+}
+</script>
+{% endblock %}

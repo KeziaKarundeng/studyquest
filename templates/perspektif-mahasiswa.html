@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>👁 Perspektif Mahasiswa</h2>
+<p class="soal-subtitle">Tampilan dari posisi mahasiswa - <strong style="color: var(--warning);">READ ONLY</strong>, Anda tidak bisa mengerjakan soal</p>
+
+<div class="login-error" style="background: rgba(255,170,0,0.12); border-color: var(--warning); color: var(--warning); margin-bottom: 20px;">
+    <i class="fas fa-ban"></i> <strong>Mode Hanya Baca:</strong> Sebagai dosen, Anda TIDAK bisa mengerjakan/menyelesaikan soal di halaman ini.
+</div>
+
+{% if soal_list %}
+<div class="soal-list">
+    {% for s in soal_list %}
+    {% set jawab = jawaban_list | selectattr('id_soal', 'equalto', s.id) | list %}
+    <div class="soal-card {{ 'soal-done' if jawab }}">
+        <div class="soal-header">
+            <span class="soal-mk-badge">{{ s.mata_kuliah }}</span>
+            <span class="soal-type-badge {{ s.tipe }}">{{ 'PG' if s.tipe == 'pilihan_ganda' else 'PDF' }}</span>
+            <span class="soal-status {{ s.status }}">{{ 'Dikerjakan' if s.status == 'dikerjakan' else 'Belum' }}</span>
+        </div>
+
+        {% if s.tipe == 'pilihan_ganda' %}
+        <p class="soal-pertanyaan"><strong>{{ s.pertanyaan }}</strong></p>
+        <ul class="soal-pilihan">
+            {% for p in s.pilihan %}
+            <li class="soal-pilihan-item">
+                <span class="pilihan-label">{{ "ABCD"[loop.index0] }}.</span> {{ p }}
+            </li>
+            {% endfor %}
+        </ul>
+        <div class="soal-jawaban">
+            <i class="fas fa-check-circle"></i> Jawaban benar: <strong>{{ s.jawaban_benar }}</strong>
+        </div>
+        {% else %}
+        <p class="soal-pertanyaan"><i class="fas fa-file-pdf"></i> {{ s.nama_asli }}</p>
+        <a href="/static/soal/{{ s.nama_file }}" target="_blank" class="btn-lihat-pdf">
+            <i class="fas fa-external-link-alt"></i> Lihat PDF
+        </a>
+        {% endif %}
+
+        {% if jawab %}
+        <div class="jawaban-list" style="margin-top: 12px;">
+            <h4 style="color: var(--text-primary); font-size: 0.85rem; margin-bottom: 6px;">Jawaban masuk:</h4>
+            {% for j in jawab %}
+            <div class="jawaban-item {{ j.benar_salah or '' }}">
+                <span class="jawaban-nama">{{ j.nama }}</span>
+                <span class="jawaban-isi">: {{ j.jawaban[:60] }}</span>
+                {% if j.benar_salah %}
+                <span class="jawaban-status {{ j.benar_salah }}">{{ j.benar_salah|upper }}</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div style="margin-top: 12px; opacity: 0.5; pointer-events: none;">
+            <button class="btn-kirim disabled" disabled>
+                <i class="fas fa-ban"></i> Tombol nonaktif untuk dosen
+            </button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<p class="empty-state">Belum ada soal yang diunggah.</p>
+{% endif %}
+{% endblock %}

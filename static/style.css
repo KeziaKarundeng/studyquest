@@ -1657,3 +1657,216 @@ tbody tr:hover {
 .sidebar-account-actions { display: grid; gap: 8px; margin-top: 24px; font-size: .75rem; }
 .sidebar-account-actions a { text-decoration: none; }
 @media (max-width: 600px) { .sidebar-account-actions { display: flex; flex-wrap: wrap; margin: 0 0 12px; gap: 18px; } }
+
+/* ===== Soal & Unggah ===== */
+.soal-success {
+    background: rgba(0, 255, 136, 0.12);
+    border: 1px solid var(--success);
+    color: var(--success);
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    margin-bottom: 18px;
+}
+
+.soal-item {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 12px;
+}
+
+.soal-item-header {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+.soal-type-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
+    text-transform: uppercase;
+}
+
+.soal-type-badge.pilihan_ganda {
+    background: rgba(0, 255, 255, 0.12);
+    color: var(--secondary);
+    border: 1px solid var(--secondary);
+}
+
+.soal-type-badge.pdf {
+    background: rgba(255, 71, 87, 0.12);
+    color: var(--danger);
+    border: 1px solid var(--danger);
+}
+
+.soal-status {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
+    margin-left: auto;
+}
+
+.soal-status.belum_dikerjakan {
+    background: rgba(255, 170, 0, 0.12);
+    color: var(--warning);
+    border: 1px solid var(--warning);
+}
+
+.soal-status.dikerjakan,
+.soal-status.selesai {
+    background: rgba(0, 255, 136, 0.12);
+    color: var(--success);
+    border: 1px solid var(--success);
+}
+
+.soal-meta {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    margin-top: 8px;
+}
+
+.soal-done {
+    opacity: 0.75;
+    border-color: var(--success-dim);
+}
+
+/* Radio pilihan soal */
+.soal-pilihan-item label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.soal-pilihan-item input[type="radio"] {
+    accent-color: var(--secondary);
+    width: 16px;
+    height: 16px;
+}
+
+/* Tombol kirim jawaban */
+.btn-kirim {
+    background: linear-gradient(135deg, var(--success-dim), var(--success));
+    color: #0a2a1a;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: filter 0.2s;
+}
+
+.btn-kirim:hover {
+    filter: brightness(1.1);
+}
+
+.btn-kirim.disabled,
+.btn-kirim:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    filter: none;
+}
+
+.btn-lihat-pdf {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--secondary);
+    padding: 8px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: border-color 0.2s;
+}
+
+.btn-lihat-pdf:hover {
+    border-color: var(--secondary);
+}
+
+/* Jawaban list (progres dosen) */
+.jawaban-list {
+    margin-top: 12px;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+}
+
+.jawaban-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    background: var(--bg-input);
+    border-radius: 6px;
+    margin-bottom: 6px;
+    font-size: 0.8rem;
+    flex-wrap: wrap;
+}
+
+.jawaban-item.benar {
+    border-left: 3px solid var(--success);
+}
+
+.jawaban-item.salah {
+    border-left: 3px solid var(--danger);
+}
+
+.jawaban-nama {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+.jawaban-nim {
+    color: var(--text-muted);
+    font-size: 0.72rem;
+}
+
+.jawaban-isi {
+    color: var(--text-light);
+    flex: 1;
+    min-width: 120px;
+}
+
+.jawaban-status {
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 999px;
+}
+
+.jawaban-status.benar {
+    background: rgba(0, 255, 136, 0.15);
+    color: var(--success);
+}
+
+.jawaban-status.salah {
+    background: rgba(255, 71, 87, 0.15);
+    color: var(--danger);
+}
+
+.jawaban-waktu {
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    margin-left: auto;
+}
+
+/* Form hint */
+.form-hint {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    margin-top: 4px;
+}

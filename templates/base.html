@@ -12,11 +12,21 @@
             <a class="brand" href="{{ url_for('dashboard') }}"><span class="brand-star">✦</span> StudyQuest</a>
             <p class="brand-caption">UNIMA · student space</p>
             <nav aria-label="Menu utama"><ul>
-            {% for endpoint, icon, label in [('dashboard', '⌂', 'Beranda'), ('page_missions', '☑', 'Kelola misi' if session.get('role') == 'dosen' else 'Misi kamu'), ('page_cek_soal', '✎', 'Cek soal'), ('page_achievements', '✺', 'Koleksi badge'), ('page_history', '◷', 'Riwayat'), ('page_profile', '☺', 'Profil')] %}
-                {% if (endpoint != 'page_missions' or session.get('role') == 'dosen') and (session.get('role') != 'dosen' or endpoint not in ['page_history', 'page_profile', 'page_cek_soal']) %}
-                <li><a href="{{ url_for(endpoint) }}" class="{{ 'active' if request.endpoint == endpoint else '' }}" {% if request.endpoint == endpoint %}aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">{{ icon }}</span>{{ label }}</a></li>
-                {% endif %}
-            {% endfor %}
+            {% if session.get('role') == 'dosen' %}
+                <li><a href="{{ url_for('dashboard') }}" class="{{ 'active' if request.endpoint == 'dashboard' else '' }}"><span class="nav-icon">⌂</span>Beranda</a></li>
+                <li><a href="{{ url_for('page_missions') }}" class="{{ 'active' if request.endpoint == 'page_missions' else '' }}"><span class="nav-icon">☑</span>Kelola misi</a></li>
+                <li><a href="{{ url_for('unggah_soal') }}" class="{{ 'active' if request.endpoint == 'unggah_soal' else '' }}"><span class="nav-icon">⇪</span>Unggah soal</a></li>
+                <li><a href="{{ url_for('lihat_progres') }}" class="{{ 'active' if request.endpoint == 'lihat_progres' else '' }}"><span class="nav-icon">📊</span>Lihat progres</a></li>
+                <li><a href="{{ url_for('perspektif_mahasiswa') }}" class="{{ 'active' if request.endpoint == 'perspektif_mahasiswa' else '' }}"><span class="nav-icon">👁</span>Perspektif mhs</a></li>
+                <li><a href="{{ url_for('page_achievements') }}" class="{{ 'active' if request.endpoint == 'page_achievements' else '' }}"><span class="nav-icon">✺</span>Koleksi badge</a></li>
+            {% else %}
+                <li><a href="{{ url_for('dashboard') }}" class="{{ 'active' if request.endpoint == 'dashboard' else '' }}"><span class="nav-icon">⌂</span>Beranda</a></li>
+                <li><a href="{{ url_for('soal_mahasiswa') }}" class="{{ 'active' if request.endpoint == 'soal_mahasiswa' else '' }}"><span class="nav-icon">✍</span>Kerjakan soal</a></li>
+                <li><a href="{{ url_for('page_cek_soal') }}" class="{{ 'active' if request.endpoint == 'page_cek_soal' else '' }}"><span class="nav-icon">✎</span>Cek soal</a></li>
+                <li><a href="{{ url_for('page_achievements') }}" class="{{ 'active' if request.endpoint == 'page_achievements' else '' }}"><span class="nav-icon">✺</span>Koleksi badge</a></li>
+                <li><a href="{{ url_for('page_history') }}" class="{{ 'active' if request.endpoint == 'page_history' else '' }}"><span class="nav-icon">◷</span>Riwayat</a></li>
+                <li><a href="{{ url_for('page_profile') }}" class="{{ 'active' if request.endpoint == 'page_profile' else '' }}"><span class="nav-icon">☺</span>Profil</a></li>
+            {% endif %}
             </ul></nav>
             <div class="sidebar-account-actions">
                 {% if session.get('role') == 'dosen' or session.get('preview_as_dosen') %}

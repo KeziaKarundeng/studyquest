@@ -1,0 +1,18 @@
+[
+  {
+    "id": "soal_001",
+    "tipe": "pilihan_ganda",
+    "pertanyaan": "Apa itu class?",
+    "pilihan": [
+      "Kumpulan objek",
+      "Blueprint/cetakan objek",
+      "Metode kelas",
+      "Variabel global"
+    ],
+    "jawaban_benar": "B",
+    "mata_kuliah": "PBO",
+    "unggah_oleh": "Nasib",
+    "tanggal_unggah": "2026-11-20T17:20:50.880075",
+    "status": "belum_dikerjakan"
+  }
+]

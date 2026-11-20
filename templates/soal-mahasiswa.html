@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>✍ Kerjakan Soal</h2>
+<p class="soal-subtitle">Daftar soal yang harus Anda kerjakan</p>
+
+{% if preview_as_dosen %}
+<div class="login-error" style="background: rgba(255,170,0,0.12); border-color: var(--warning); color: var(--warning);">
+    <i class="fas fa-eye"></i> Mode preview dosen - Anda tidak bisa mengerjakan soal ini.
+</div>
+{% endif %}
+
+<!-- Soal belum dikerjakan -->
+{% if soal_belum %}
+<h3 style="color: var(--text-primary); margin: 20px 0 12px;">📋 Soal Belum Dikerjakan ({{ soal_belum|length }})</h3>
+<div class="soal-list">
+    {% for s in soal_belum %}
+    <div class="soal-card" id="soal-card-{{ s.id }}">
+        <div class="soal-header">
+            <span class="soal-mk-badge">{{ s.mata_kuliah }}</span>
+            <span class="soal-type-badge {{ s.tipe }}">{{ 'Pilihan Ganda' if s.tipe == 'pilihan_ganda' else 'PDF' }}</span>
+        </div>
+
+        {% if s.tipe == 'pilihan_ganda' %}
+        <p class="soal-pertanyaan"><strong>{{ s.pertanyaan }}</strong></p>
+        <ul class="soal-pilihan">
+            {% for p in s.pilihan %}
+            <li class="soal-pilihan-item">
+                <label>
+                    <input type="radio" name="jawaban_{{ s.id }}" value="{{ "ABCD"[loop.index0] }}" {{ 'disabled' if preview_as_dosen }}>
+                    <span class="pilihan-label">{{ "ABCD"[loop.index0] }}.</span> {{ p }}
+                </label>
+            </li>
+            {% endfor %}
+        </ul>
+        <button class="btn-kirim {{ 'disabled' if preview_as_dosen }}" onclick="kirimJawaban('{{ s.id }}')" {{ 'disabled' if preview_as_dosen }}>
+            <i class="fas fa-paper-plane"></i> Kirim Jawaban
+        </button>
+        {% else %}
+        <p class="soal-pertanyaan"><i class="fas fa-file-pdf"></i> {{ s.nama_asli }}</p>
+        <a href="/static/soal/{{ s.nama_file }}" target="_blank" class="btn-lihat-pdf">
+            <i class="fas fa-external-link-alt"></i> Lihat PDF
+        </a>
+        <div class="form-group" style="margin-top: 12px;">
+            <label>Jawaban / Kesimpulan Anda:</label>
+            <textarea id="jawaban-text-{{ s.id }}" rows="3" placeholder="Tulis jawaban Anda..." {{ 'disabled' if preview_as_dosen }}></textarea>
+        </div>
+        <button class="btn-kirim {{ 'disabled' if preview_as_dosen }}" onclick="kirimJawaban('{{ s.id }}', true)" {{ 'disabled' if preview_as_dosen }}>
+            <i class="fas fa-paper-plane"></i> Kirim Jawaban
+        </button>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<p class="empty-state">🎉 Semua soal sudah dikerjakan!</p>
+{% endif %}
+
+<!-- Soal sudah dikerjakan -->
+{% if soal_selesai %}
+<h3 style="color: var(--text-primary); margin: 24px 0 12px;">✅ Soal Sudah Dikerjakan ({{ soal_selesai|length }})</h3>
+<div class="soal-list">
+    {% for item in soal_selesai %}
+    <div class="soal-card soal-done">
+        <div class="soal-header">
+            <span class="soal-mk-badge">{{ item.soal.mata_kuliah }}</span>
+            <span class="soal-status selesai">Sudah Dikerjakan</span>
+        </div>
+        {% if item.soal.tipe == 'pilihan_ganda' %}
+        <p class="soal-pertanyaan">{{ item.soal.pertanyaan }}</p>
+        <div class="soal-jawaban {{ item.jawaban.benar_salah }}">
+            <i class="fas fa-{{ 'check' if item.jawaban.benar_salah == 'benar' else 'times' }}-circle"></i>
+            Jawaban Anda: <strong>{{ item.jawaban.jawaban }}</strong>
+            {% if item.jawaban.benar_salah == 'benar' %}
+            · <span style="color: var(--success);">BENAR ✓</span>
+            {% else %}
+            · <span style="color: var(--danger);">SALAH ✗</span> · Jawaban benar: <strong>{{ item.soal.jawaban_benar }}</strong>
+            {% endif %}
+        </div>
+        {% else %}
+        <p class="soal-pertanyaan"><i class="fas fa-file-pdf"></i> {{ item.soal.nama_asli }}</p>
+        <div class="soal-jawaban">
+            <i class="fas fa-check-circle"></i> Jawaban Anda: {{ item.jawaban.jawaban[:100] }}{% if item.jawaban.jawaban|length > 100 %}...{% endif %}
+        </div>
+        {% endif %}
+        <p class="soal-meta">Dikerjakan: {{ item.jawaban.waktu_dikerjakan[:16].replace('T', ' ') }}</p>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<script>
+async function kirimJawaban(idSoal, isText = false) {
+    {% if preview_as_dosen %}
+    alert('Mode preview - Anda tidak bisa mengerjakan soal!');
+    return;
+    {% endif %}
+
+    let jawaban;
+    if (isText) {
+        jawaban = document.getElementById('jawaban-text-' + idSoal)?.value || '';
+    } else {
+        const selected = document.querySelector(`input[name="jawaban_${idSoal}"]:checked`);
+        jawaban = selected ? selected.value : '';
+    }
+
+    if (!jawaban.trim()) {
+        alert('Pilih jawaban terlebih dahulu!');
+        return;
+    }
+
+    try {
+        const resp = await fetch('/kirim-jawaban', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({id_soal: idSoal, jawaban: jawaban})
+        });
+        const data = await resp.json();
+
+        if (data.status === 'sukses') {
+            alert(data.pesan + (data.benar_salah ? ` (${data.benar_salah.toUpperCase()})` : ''));
+            location.reload();
+        } else {
+            alert(data.pesan);
+        }
+    } catch (err) {
+        alert('Terjadi kesalahan: ' + err.message);
+    }
+}
+</script>
+{% endblock %}

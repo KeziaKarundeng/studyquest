@@ -40,6 +40,42 @@ def muat_soal():
     return []
 
 
+def muat_soal_universal():
+    """Muat data soal universal yang diunggah dosen."""
+    import json
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "soal_universal.json")
+    if os.path.exists(path):
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return []
+
+
+def tulis_soal_universal(data):
+    """Tulis data soal universal ke JSON."""
+    import json
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "soal_universal.json")
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+def muat_jawaban_mahasiswa():
+    """Muat data jawaban mahasiswa."""
+    import json
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "jawaban_mahasiswa.json")
+    if os.path.exists(path):
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return []
+
+
+def tulis_jawaban_mahasiswa(data):
+    """Tulis data jawaban mahasiswa ke JSON."""
+    import json
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "jawaban_mahasiswa.json")
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
 # --- Route Login ---
 
 @app.route("/login", methods=["GET", "POST"])
@@ -523,6 +559,260 @@ def page_cek_soal():
         user_name=session.get("user_name", "Mahasiswa"),
         role=session.get("role"),
         preview_as_dosen=session.get("preview_as_dosen", False),
+    )
+
+
+# --- Unggah Soal (Dosen) ---
+
+@app.route("/unggah-soal", methods=["GET", "POST"])
+def unggah_soal():
+    """Halaman unggah soal untuk dosen."""
+    if not role_wajib():
+        return redirect(url_for("login"))
+    if session.get("role") != "dosen":
+        return redirect(url_for("dashboard"))
+
+    if request.method == "POST":
+        tipe = request.form.get("tipe", "")
+        mata_kuliah = request.form.get("mata_kuliah", "").strip()
+
+        if not mata_kuliah:
+            return render_template("unggah-soal.html",
+                error="Mata kuliah wajib diisi.",
+                soal_list=muat_soal_universal(),
+                role=session.get("role"),
+            )
+
+        soal_list = muat_soal_universal()
+        id_soal = f"soal_{len(soal_list) + 1:03d}"
+
+        if tipe == "pilihan_ganda":
+            pertanyaan = request.form.get("pertanyaan", "").strip()
+            pilihan = [
+                request.form.get("pilihan_a", ""),
+                request.form.get("pilihan_b", ""),
+                request.form.get("pilihan_c", ""),
+                request.form.get("pilihan_d", ""),
+            ]
+            jawaban_benar = request.form.get("jawaban_benar", "")
+
+            if not pertanyaan or not jawaban_benar:
+                return render_template("unggah-soal.html",
+                    error="Pertanyaan dan jawaban benar wajib diisi.",
+                    soal_list=soal_list,
+                    role=session.get("role"),
+                )
+
+            soal_baru = {
+                "id": id_soal,
+                "tipe": "pilihan_ganda",
+                "pertanyaan": pertanyaan,
+                "pilihan": pilihan,
+                "jawaban_benar": jawaban_benar,
+                "mata_kuliah": mata_kuliah,
+                "unggah_oleh": session.get("user_name", "Dosen"),
+                "tanggal_unggah": __import__("datetime").datetime.now().isoformat(),
+                "status": "belum_dikerjakan",
+            }
+        else:
+            # PDF - simpan nama file saja
+            file = request.files.get("file_pdf")
+            if not file or not file.filename:
+                return render_template("unggah-soal.html",
+                    error="File PDF wajib diunggah.",
+                    soal_list=soal_list,
+                    role=session.get("role"),
+                )
+
+            import uuid
+            ext = file.filename.rsplit(".", 1)[-1].lower()
+            if ext != "pdf":
+                return render_template("unggah-soal.html",
+                    error="File harus berformat PDF.",
+                    soal_list=soal_list,
+                    role=session.get("role"),
+                )
+
+            nama_file = f"{id_soal}_{uuid.uuid4().hex[:8]}.pdf"
+            upload_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "soal")
+            os.makedirs(upload_dir, exist_ok=True)
+            file.save(os.path.join(upload_dir, nama_file))
+
+            soal_baru = {
+                "id": id_soal,
+                "tipe": "pdf",
+                "nama_file": nama_file,
+                "nama_asli": file.filename,
+                "mata_kuliah": mata_kuliah,
+                "unggah_oleh": session.get("user_name", "Dosen"),
+                "tanggal_unggah": __import__("datetime").datetime.now().isoformat(),
+                "status": "belum_dikerjakan",
+            }
+
+        soal_list.append(soal_baru)
+        tulis_soal_universal(soal_list)
+
+        return render_template("unggah-soal.html",
+            success=f"Soal {id_soal} berhasil diunggah!",
+            soal_list=muat_soal_universal(),
+            role=session.get("role"),
+        )
+
+    return render_template("unggah-soal.html",
+        soal_list=muat_soal_universal(),
+        role=session.get("role"),
+    )
+
+
+# --- Soal untuk Mahasiswa ---
+
+@app.route("/soal-mahasiswa")
+def soal_mahasiswa():
+    """Halaman soal untuk dikerjakan mahasiswa (atau dosen preview)."""
+    if not role_wajib():
+        return redirect(url_for("login"))
+    if session.get("role") != "mahasiswa":
+        return redirect(url_for("dashboard"))
+
+    soal_list = muat_soal_universal()
+    jawaban_list = muat_jawaban_mahasiswa()
+    nim = session.get("nim", "")
+
+    # Filter: soal yang belum dikerjakan mahasiswa ini
+    soal_belum = []
+    for s in soal_list:
+        sudah = any(j.get("id_soal") == s["id"] and j.get("nim") == nim for j in jawaban_list)
+        if not sudah:
+            soal_belum.append(s)
+
+    # Soal yang sudah dikerjakan
+    soal_selesai = []
+    for s in soal_list:
+        jawab = next((j for j in jawaban_list if j.get("id_soal") == s["id"] and j.get("nim") == nim), None)
+        if jawab:
+            soal_selesai.append({"soal": s, "jawaban": jawab})
+
+    return render_template("soal-mahasiswa.html",
+        soal_belum=soal_belum,
+        soal_selesai=soal_selesai,
+        user_name=session.get("user_name", "Mahasiswa"),
+        role=session.get("role"),
+        preview_as_dosen=session.get("preview_as_dosen", False),
+    )
+
+
+# --- Kirim Jawaban (Mahasiswa saja, Dosen DILARANG) ---
+
+@app.route("/kirim-jawaban", methods=["POST"])
+def kirim_jawaban():
+    """Kirim jawaban mahasiswa. Dosen DILARANG mengerjakan soal."""
+    if not role_wajib():
+        return redirect(url_for("login"))
+
+    # BLOKIR: Dosen (baik asli maupun preview) tidak boleh mengerjakan soal
+    if session.get("role") == "dosen":
+        return jsonify({"status": "error", "pesan": "Dosen tidak boleh mengerjakan soal!"}), 403
+    if session.get("preview_as_dosen"):
+        return jsonify({"status": "error", "pesan": "Mode preview - Anda tidak bisa mengerjakan soal!"}), 403
+
+    data = request.get_json()
+    if not data:
+        return jsonify({"status": "error", "pesan": "Data tidak diterima"}), 400
+
+    id_soal = data.get("id_soal", "")
+    jawaban = data.get("jawaban", "").strip()
+
+    if not id_soal or not jawaban:
+        return jsonify({"status": "error", "pesan": "Soal dan jawaban wajib diisi"}), 400
+
+    soal_list = muat_soal_universal()
+    soal = next((s for s in soal_list if s["id"] == id_soal), None)
+    if not soal:
+        return jsonify({"status": "error", "pesan": "Soal tidak ditemukan"}), 404
+
+    nim = session.get("nim", "")
+    jawaban_list = muat_jawaban_mahasiswa()
+
+    # Cek apakah sudah pernah dijawab
+    if any(j.get("id_soal") == id_soal and j.get("nim") == nim for j in jawaban_list):
+        return jsonify({"status": "error", "pesan": "Soal sudah pernah dijawab"}), 400
+
+    # Hitung benar/salah (untuk pilihan ganda)
+    benar_salah = None
+    if soal.get("tipe") == "pilihan_ganda":
+        benar_salah = "benar" if jawaban == soal.get("jawaban_benar") else "salah"
+
+    jawaban_baru = {
+        "id_soal": id_soal,
+        "nim": nim,
+        "nama": session.get("user_name", ""),
+        "jawaban": jawaban,
+        "benar_salah": benar_salah,
+        "waktu_dikerjakan": __import__("datetime").datetime.now().isoformat(),
+    }
+    jawaban_list.append(jawaban_baru)
+    tulis_jawaban_mahasiswa(jawaban_list)
+
+    # Update status soal
+    soal["status"] = "dikerjakan"
+    tulis_soal_universal(soal_list)
+
+    return jsonify({
+        "status": "sukses",
+        "pesan": "Jawaban berhasil dikirim!",
+        "benar_salah": benar_salah,
+    }), 200
+
+
+# --- Lihat Progres (Dosen) ---
+
+@app.route("/lihat-progres")
+def lihat_progres():
+    """Halaman lihat progres jawaban mahasiswa (khusus dosen)."""
+    if not role_wajib():
+        return redirect(url_for("login"))
+    if session.get("role") != "dosen":
+        return redirect(url_for("dashboard"))
+
+    soal_list = muat_soal_universal()
+    jawaban_list = muat_jawaban_mahasiswa()
+
+    # Gabungkan data soal dengan jawaban
+    progres = []
+    for s in soal_list:
+        jawaban_soal = [j for j in jawaban_list if j.get("id_soal") == s["id"]]
+        progres.append({
+            "soal": s,
+            "jawaban_list": jawaban_soal,
+            "total_jawab": len(jawaban_soal),
+        })
+
+    return render_template("lihat-progres.html",
+        progres=progres,
+        total_soal=len(soal_list),
+        total_jawaban=len(jawaban_list),
+        role=session.get("role"),
+    )
+
+
+# --- Perspektif Mahasiswa (Dosen lihat tapi TIDAK BISA mengerjakan) ---
+
+@app.route("/perspektif-mahasiswa")
+def perspektif_mahasiswa():
+    """Dosen melihat dari posisi mahasiswa - READ ONLY, tidak bisa mengerjakan."""
+    if not role_wajib():
+        return redirect(url_for("login"))
+    if session.get("role") != "dosen":
+        return redirect(url_for("dashboard"))
+
+    soal_list = muat_soal_universal()
+    jawaban_list = muat_jawaban_mahasiswa()
+
+    return render_template("perspektif-mahasiswa.html",
+        soal_list=soal_list,
+        jawaban_list=jawaban_list,
+        role=session.get("role"),
+        preview_only=True,
     )
 
 

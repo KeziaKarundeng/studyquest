@@ -2,7 +2,7 @@
   "user": {
     "id": "user_demo_001",
     "name": "Mahasiswa",
-    "avatar": "avatar1",
+    "avatar": "avatar2",
     "level": 1,
     "total_xp": 0,
     "badges": [],
@@ -46,6 +46,19 @@
       "tenggat": null,
       "status": "belum mulai",
       "dibuat_pada": "2024-01-01T00:00:00",
+      "diselesaikan_pada": null,
+      "xp_diberikan": false
+    },
+    {
+      "id": "misu_0a03e3d2",
+      "judul": "Tugas 1",
+      "mata_kuliah": "pemrograman berbasis objek",
+      "deskripsi": "nedfhewiunfueiuerb",
+      "jenis": "individu",
+      "tingkat_kesulitan": "sedang",
+      "tenggat": "2026-11-21",
+      "status": "belum mulai",
+      "dibuat_pada": "2026-11-20T17:05:03.281865",
       "diselesaikan_pada": null,
       "xp_diberikan": false
     }

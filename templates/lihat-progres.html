@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>📊 Lihat Progres</h2>
+<p class="soal-subtitle">Progres pengerjaan soal oleh mahasiswa</p>
+
+<div class="stats-cards" style="margin-bottom: 24px;">
+    <div class="stat-card card-active">
+        <div class="card-icon">📋</div>
+        <div class="card-value">{{ total_soal }}</div>
+        <div class="card-label">Total Soal</div>
+    </div>
+    <div class="stat-card card-selesai">
+        <div class="card-icon">✍</div>
+        <div class="card-value">{{ total_jawaban }}</div>
+        <div class="card-label">Total Jawaban</div>
+    </div>
+</div>
+
+{% if progres %}
+<div class="soal-list">
+    {% for item in progres %}
+    <div class="soal-card">
+        <div class="soal-header">
+            <span class="soal-mk-badge">{{ item.soal.mata_kuliah }}</span>
+            <span class="soal-type-badge {{ item.soal.tipe }}">{{ 'PG' if item.soal.tipe == 'pilihan_ganda' else 'PDF' }}</span>
+            <span class="soal-status {{ item.soal.status }}">{{ item.total_jawab }} mahasiswa menjawab</span>
+        </div>
+
+        {% if item.soal.tipe == 'pilihan_ganda' %}
+        <p class="soal-pertanyaan">{{ item.soal.pertanyaan }}</p>
+        <div class="soal-jawaban">
+            <i class="fas fa-check-circle"></i> Jawaban benar: <strong>{{ item.soal.jawaban_benar }}</strong>
+        </div>
+        {% else %}
+        <p class="soal-pertanyaan"><i class="fas fa-file-pdf"></i> {{ item.soal.nama_asli }}</p>
+        {% endif %}
+
+        {% if item.jawaban_list %}
+        <div class="jawaban-list">
+            <h4 style="color: var(--text-primary); margin: 12px 0 8px; font-size: 0.9rem;">Jawaban Mahasiswa:</h4>
+            {% for j in item.jawaban_list %}
+            <div class="jawaban-item {{ j.benar_salah or '' }}">
+                <span class="jawaban-nama">{{ j.nama }}</span>
+                <span class="jawaban-nim">({{ j.nim }})</span>
+                <span class="jawaban-isi">: {{ j.jawaban[:80] }}{% if j.jawaban|length > 80 %}...{% endif %}</span>
+                {% if j.benar_salah %}
+                <span class="jawaban-status {{ j.benar_salah }}">{{ j.benar_salah|upper }}</span>
+                {% endif %}
+                <span class="jawaban-waktu">{{ j.waktu_dikerjakan[:16].replace('T', ' ') }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="empty-state" style="margin-top: 12px; font-size: 0.85rem;">Belum ada yang menjawab.</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<p class="empty-state">Belum ada soal yang diunggah.</p>
+{% endif %}
+{% endblock %}
