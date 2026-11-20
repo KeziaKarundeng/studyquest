@@ -317,9 +317,11 @@ def profile_post():
 
 @app.route("/missions")
 def page_missions():
-    """Halaman daftar misi."""
+    """Halaman daftar misi (khusus dosen)."""
     if not role_wajib():
         return redirect(url_for("role_select"))
+    if session.get("role") != "dosen":
+        return redirect(url_for("dashboard"))
     return render_template("missions.html")
 
 @app.route("/achievements")
