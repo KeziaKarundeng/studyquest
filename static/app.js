@@ -178,6 +178,7 @@ function loadPageContent(page) {
     const contentMap = {
         'dashboard': '/dashboard',
         'missions': '/missions',
+        'cek-soal': '/cek-soal',
         'achievements': '/achievements',
         'history': '/history',
         'profile': '/profile'
@@ -221,6 +222,7 @@ document.querySelectorAll('.sidebar nav ul li a').forEach(link => {
         const pageMap = {
             'nav-dashboard': 'dashboard',
             'nav-missions': 'missions',
+            'nav-cek-soal': 'cek-soal',
             'nav-achievements': 'achievements',
             'nav-history': 'history',
             'nav-profile': 'profile'

@@ -15,37 +15,129 @@ penyimpanan = PenyimpananJSON()
 # --- Helper: Cek Role ---
 
 def role_wajib():
-    """Return True jika role sudah dipilih di session."""
+    """Return True jika role sudah login di session."""
     return session.get("role") in ("dosen", "mahasiswa")
 
 
-# --- Route Role Select ---
+def muat_kredensial():
+    """Muat data kredensial dosen & mahasiswa dari JSON."""
+    import json
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "credentials.json")
+    if os.path.exists(path):
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {"dosen": [], "mahasiswa": []}
 
-@app.route("/role-select", methods=["GET", "POST"])
-def role_select():
-    """Halaman pemilihan role: Dosen atau Mahasiswa."""
+
+def muat_soal():
+    """Muat data soal dari JSON."""
+    import json
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "soal.json")
+    if os.path.exists(path):
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return []
+
+
+# --- Route Login ---
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    """Halaman login: pilih tab Dosen/Mahasiswa lalu isi kredensial."""
+    if role_wajib():
+        return redirect(url_for("dashboard"))
+
     if request.method == "POST":
-        role = request.form.get("role")
-        if role in ("dosen", "mahasiswa"):
-            session["role"] = role
-            return redirect(url_for("dashboard"))
-    return render_template("role_select.html")
+        return _proses_login()
+
+    error = request.args.get("error", "")
+    active_tab = request.args.get("role", "dosen")
+    return render_template("login.html", error=error, active_tab=active_tab)
+
+
+@app.route("/do-login", methods=["POST"])
+def do_login():
+    """Verifikasi kredensial dan set session."""
+    if role_wajib():
+        return redirect(url_for("dashboard"))
+    return _proses_login()
+
+
+def _proses_login():
+    """Proses verifikasi kredensial dari form login."""
+    role = request.form.get("role", "")
+    creds = muat_kredensial()
+
+    if role == "dosen":
+        username = request.form.get("username", "").strip().lower()
+        password = request.form.get("password", "")
+        for d in creds.get("dosen", []):
+            if d.get("username", "").lower() == username and d.get("password") == password:
+                session.clear()
+                session["role"] = "dosen"
+                session["user_name"] = d.get("name", username.capitalize())
+                return redirect(url_for("dashboard"))
+        return render_template("login.html", error="Username atau password dosen salah.", active_tab="dosen")
+
+    elif role == "mahasiswa":
+        nama = request.form.get("nama", "").strip().lower()
+        nim = request.form.get("nim", "").strip()
+        for m in creds.get("mahasiswa", []):
+            if m.get("nama", "").lower() == nama and m.get("nim") == nim:
+                session.clear()
+                session["role"] = "mahasiswa"
+                session["user_name"] = m.get("name", nama.title())
+                session["nim"] = nim
+                return redirect(url_for("dashboard"))
+        return render_template("login.html", error="Nama atau NIM mahasiswa tidak terdaftar.", active_tab="mahasiswa")
+
+    return redirect(url_for("login"))
 
 
 @app.route("/ganti-role")
 def ganti_role():
-    """Logout role dan kembali ke pemilihan role."""
-    session.pop("role", None)
-    return redirect(url_for("role_select"))
+    """Dosen bisa pindah ke mode mahasiswa (cek soal), mahasiswa asli tidak bisa pindah ke dosen."""
+    if not role_wajib():
+        return redirect(url_for("login"))
+
+    if session.get("role") == "dosen":
+        # Dosen -> mode mahasiswa (preview untuk cek soal)
+        creds = muat_kredensial()
+        m = creds.get("mahasiswa", [{}])[0] if creds.get("mahasiswa") else {}
+        session["dosen_name"] = session.get("user_name", "Dosen")
+        session["role"] = "mahasiswa"
+        session["preview_as_dosen"] = True
+        session["user_name"] = m.get("name", "Mahasiswa")
+        session["nim"] = m.get("nim", "")
+        return redirect(url_for("dashboard"))
+
+    if session.get("preview_as_dosen"):
+        # Mode preview mahasiswa (dari dosen) -> kembali ke dosen
+        session["role"] = "dosen"
+        session["user_name"] = session.get("dosen_name", "Dosen")
+        session.pop("preview_as_dosen", None)
+        session.pop("nim", None)
+        session.pop("dosen_name", None)
+        return redirect(url_for("dashboard"))
+
+    # Mahasiswa asli -> tidak boleh ganti ke dosen
+    return redirect(url_for("dashboard"))
+
+
+@app.route("/logout")
+def logout():
+    """Hapus session dan kembali ke login."""
+    session.clear()
+    return redirect(url_for("login"))
 
 
 # --- Route Utama ---
 
 @app.route("/")
 def index():
-    """Redirect ke role select jika belum pilih, selainnya ke dashboard."""
+    """Redirect ke login jika belum login, selainnya ke dashboard."""
     if not role_wajib():
-        return redirect(url_for("role_select"))
+        return redirect(url_for("login"))
     return redirect(url_for("dashboard"))
 
 
@@ -55,7 +147,7 @@ def index():
 def dashboard():
     """Halaman dashboard utama."""
     if not role_wajib():
-        return redirect(url_for("role_select"))
+        return redirect(url_for("login"))
     pengelola = penyimpanan.baca_data()
     user = pengelola.user
     stats = pengelola.get_statistik()
@@ -69,7 +161,7 @@ def dashboard():
         'level': user.level
     }
     return render_template("dashboard.html",
-        user_name=user.name,
+        user_name=session.get("user_name", user.name),
         user_avatar=user.avatar,
         total_xp=user.total_xp,
         level=user.level,
@@ -78,6 +170,7 @@ def dashboard():
         misi_terdekat=misi_terdekat,
         user_badges=user.badges,
         role=session.get("role"),
+        preview_as_dosen=session.get("preview_as_dosen", False),
     )
 
 
@@ -319,7 +412,7 @@ def profile_post():
 def page_missions():
     """Halaman daftar misi (khusus dosen)."""
     if not role_wajib():
-        return redirect(url_for("role_select"))
+        return redirect(url_for("login"))
     if session.get("role") != "dosen":
         return redirect(url_for("dashboard"))
     return render_template("missions.html")
@@ -328,7 +421,7 @@ def page_missions():
 def page_achievements():
     """Halaman pencapaian."""
     if not role_wajib():
-        return redirect(url_for("role_select"))
+        return redirect(url_for("login"))
     pengelola = penyimpanan.baca_data()
     user = pengelola.user
     
@@ -381,7 +474,7 @@ def page_achievements():
 def page_history():
     """Halaman riwayat."""
     if not role_wajib():
-        return redirect(url_for("role_select"))
+        return redirect(url_for("login"))
     pengelola = penyimpanan.baca_data()
     selesai_list = [m for m in pengelola._misi_list if m.status == "selesai"]
     selesai_list.sort(key=lambda x: x.diselesaikan_pada or "", reverse=True)
@@ -398,11 +491,11 @@ def page_history():
 def page_profile():
     """Halaman profil."""
     if not role_wajib():
-        return redirect(url_for("role_select"))
+        return redirect(url_for("login"))
     pengelola = penyimpanan.baca_data()
     user = pengelola.user
     return render_template("profile.html",
-        user_name=user.name,
+        user_name=session.get("user_name", user.name),
         user_avatar=user.avatar,
         total_xp=user.total_xp,
         level=user.level,
@@ -411,11 +504,29 @@ def page_profile():
     )
 
 
+@app.route("/cek-soal")
+def page_cek_soal():
+    """Halaman cek soal (khusus mahasiswa / dosen preview sebagai mahasiswa)."""
+    if not role_wajib():
+        return redirect(url_for("login"))
+    if session.get("role") != "mahasiswa":
+        return redirect(url_for("dashboard"))
+    soal_list = muat_soal()
+    return render_template("soal.html",
+        soal_list=soal_list,
+        user_name=session.get("user_name", "Mahasiswa"),
+        role=session.get("role"),
+        preview_as_dosen=session.get("preview_as_dosen", False),
+    )
+
+
 # --- Static Data Demo (dijalankan sekali) ---
 
 @app.route("/setup-demo", methods=["POST"])
 def setup_demo():
-    """Setup data demo awal (hanya sekali)."""
+    """Setup data demo awal (hanya untuk dosen)."""
+    if session.get("role") != "dosen":
+        return jsonify({"status": "error", "pesan": "Hanya dosen yang boleh setup demo"}), 403
     pengelola = penyimpanan.baca_data()
     
     # Cek apakah sudah ada data demo (lihat apakah misi ada dengan demo flag)

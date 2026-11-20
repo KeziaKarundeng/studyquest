@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2><i class="fas fa-file-alt"></i> Cek Soal</h2>
+<p class="soal-subtitle">Daftar soal yang diberikan dosen untuk mata kuliah Anda</p>
+
+<div class="soal-list" id="soal-list">
+    {% if soal_list %}
+    {% for soal in soal_list %}
+    <div class="soal-card">
+        <div class="soal-header">
+            <span class="soal-mk-badge">{{ soal.mata_kuliah }}</span>
+            <span class="soal-number">Soal #{{ loop.index }}</span>
+        </div>
+        <p class="soal-pertanyaan"><strong>{{ soal.pertanyaan }}</strong></p>
+        <ul class="soal-pilihan">
+            {% for p in soal.pilihan %}
+            <li class="soal-pilihan-item">
+                <span class="pilihan-label">{{ "ABCD"[loop.index0] }}.</span> {{ p }}
+            </li>
+            {% endfor %}
+        </ul>
+        <div class="soal-jawaban">
+            <i class="fas fa-check-circle"></i> Jawaban benar: <strong>{{ soal.jawaban }}</strong>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <p class="empty-state">Belum ada soal yang tersedia.</p>
+    {% endif %}
+</div>
+{% endblock %}

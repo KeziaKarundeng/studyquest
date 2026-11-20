@@ -16,7 +16,9 @@
                 {% if session.get('role') %}
                 <span class="role-badge badge-{{ session.get('role') }}">
                     {% if session.get('role') == 'dosen' %}Dosen{% else %}Mahasiswa{% endif %}
+                    {% if session.get('preview_as_dosen') %}(Preview){% endif %}
                 </span>
+                <div class="sidebar-user">{{ session.get('user_name', '') }}</div>
                 {% endif %}
             </div>
             <nav>
@@ -25,12 +27,17 @@
                     {% if session.get('role') == 'dosen' %}
                     <li><a href="#" id="nav-missions"><i class="fas fa-tasks"></i> Kelola Misi</a></li>
                     <li><a href="#" id="nav-achievements"><i class="fas fa-trophy"></i> Pencapaian</a></li>
+                    <li class="nav-switch-role"><a href="{{ url_for('ganti_role') }}"><i class="fas fa-user-graduate"></i> Lihat sebagai Mahasiswa</a></li>
                     {% else %}
+                    <li><a href="#" id="nav-cek-soal"><i class="fas fa-file-alt"></i> Cek Soal</a></li>
                     <li><a href="#" id="nav-achievements"><i class="fas fa-trophy"></i> Pencapaian</a></li>
                     <li><a href="#" id="nav-history"><i class="fas fa-history"></i> Riwayat</a></li>
                     <li><a href="#" id="nav-profile"><i class="fas fa-user"></i> Profil</a></li>
+                    {% if session.get('preview_as_dosen') %}
+                    <li class="nav-switch-role"><a href="{{ url_for('ganti_role') }}"><i class="fas fa-chalkboard-teacher"></i> Kembali ke Dosen</a></li>
                     {% endif %}
-                    <li class="nav-switch-role"><a href="{{ url_for('ganti_role') }}"><i class="fas fa-exchange-alt"></i> Ganti Role</a></li>
+                    {% endif %}
+                    <li class="nav-logout"><a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
                 </ul>
             </nav>
         </aside>

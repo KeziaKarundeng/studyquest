@@ -1,0 +1,86 @@
+[
+  {
+    "id": "soal_001",
+    "mata_kuliah": "Pemrograman Berorientasi Objek",
+    "pertanyaan": "Apa itu class dalam OOP?",
+    "pilihan": [
+      "Kumpulan objek yang sudah jadi",
+      "Blueprint/cetakan untuk membuat objek",
+      "Metode untuk menghapus objek",
+      "Variabel global pada program"
+    ],
+    "jawaban": "Blueprint/cetakan untuk membuat objek"
+  },
+  {
+    "id": "soal_002",
+    "mata_kuliah": "Pemrograman Berorientasi Objek",
+    "pertanyaan": "Apa perbedaan utama antara class dan object?",
+    "pilihan": [
+      "Tidak ada perbedaan",
+      "Class adalah instance, object adalah template",
+      "Class adalah template, object adalah instance dari class",
+      "Class hanya untuk Java, object untuk Python"
+    ],
+    "jawaban": "Class adalah template, object adalah instance dari class"
+  },
+  {
+    "id": "soal_003",
+    "mata_kuliah": "Pemrograman Berorientasi Objek",
+    "pertanyaan": "Konsep OOP yang memungkinkan satu class memiliki banyak bentuk (method dengan nama sama tetapi parameter berbeda) disebut...",
+    "pilihan": [
+      "Encapsulation",
+      "Inheritance",
+      "Polymorphism",
+      "Abstraction"
+    ],
+    "jawaban": "Polymorphism"
+  },
+  {
+    "id": "soal_004",
+    "mata_kuliah": "Pancasila dan Kewarganegaraan",
+    "pertanyaan": "Silah kelima Pancasila adalah...",
+    "pilihan": [
+      "Keadilan sosial bagi seluruh rakyat Indonesia",
+      "Ketuhanan Yang Maha Esa",
+      "Persatuan Indonesia",
+      "Kemanusiaan yang adil dan beradab"
+    ],
+    "jawaban": "Keadilan sosial bagi seluruh rakyat Indonesia"
+  },
+  {
+    "id": "soal_005",
+    "mata_kuliah": "Pancasila dan Kewarganegaraan",
+    "pertanyaan": "Sila ke-4 Pancasila menekankan pada nilai...",
+    "pilihan": [
+      "Kebersamaan dan gotong royong",
+      "Musyawarah untuk mufakat",
+      "Ketuhanan dan keimanan",
+      "Persatuan dan kesatuan bangsa"
+    ],
+    "jawaban": "Musyawarah untuk mufakat"
+  },
+  {
+    "id": "soal_006",
+    "mata_kuliah": "Matematika Dasar",
+    "pertanyaan": "Hasil dari 2x + 5 = 13 adalah...",
+    "pilihan": [
+      "x = 3",
+      "x = 4",
+      "x = 5",
+      "x = 6"
+    ],
+    "jawaban": "x = 4"
+  },
+  {
+    "id": "soal_007",
+    "mata_kuliah": "Matematika Dasar",
+    "pertanyaan": "Rumus luas lingkaran adalah...",
+    "pilihan": [
+      "2 x pi x r",
+      "pi x r^2",
+      "pi x d",
+      "1/2 x pi x r^2"
+    ],
+    "jawaban": "pi x r^2"
+  }
+]

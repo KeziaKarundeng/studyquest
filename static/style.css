@@ -1093,6 +1093,253 @@ tr:hover {
     color: var(--warning);
 }
 
+/* Logout */
+.nav-logout a {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin-top: 8px;
+}
+
+.nav-logout a:hover {
+    color: var(--danger);
+}
+
+/* Nama user di sidebar */
+.sidebar-user {
+    color: var(--text-light);
+    font-size: 0.85rem;
+    margin-top: 6px;
+    font-weight: 600;
+}
+
+/* ============ LOGIN PAGE ============ */
+.login-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(ellipse at top, var(--bg-secondary), var(--bg-primary));
+    padding: 24px;
+}
+
+.login-container {
+    width: 100%;
+    max-width: 420px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px 28px;
+    text-align: center;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+}
+
+.login-header {
+    margin-bottom: 24px;
+}
+
+.login-header h1 {
+    font-size: 1.8rem;
+    color: var(--text-primary);
+}
+
+.login-error {
+    background: rgba(255, 71, 87, 0.12);
+    border: 1px solid var(--danger);
+    color: var(--danger);
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    margin-bottom: 18px;
+    text-align: left;
+}
+
+.login-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 22px;
+    background: var(--bg-input);
+    padding: 5px;
+    border-radius: 10px;
+}
+
+.login-tab {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.login-tab.active {
+    background: var(--primary);
+    color: white;
+}
+
+.login-form {
+    display: none;
+    text-align: left;
+}
+
+.login-form.active {
+    display: block;
+}
+
+.login-form .form-group {
+    margin-bottom: 16px;
+}
+
+.login-form label {
+    display: block;
+    color: var(--text-light);
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+.login-form input {
+    width: 100%;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.login-form input:focus {
+    border-color: var(--secondary);
+}
+
+.btn-login {
+    width: 100%;
+    padding: 13px;
+    border: none;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 700;
+    color: white;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: filter 0.2s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-dosen {
+    background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+}
+
+.btn-mahasiswa {
+    background: linear-gradient(135deg, var(--success-dim), var(--success));
+    color: #0a2a1a;
+}
+
+.btn-login:hover {
+    filter: brightness(1.1);
+}
+
+.btn-login:active {
+    transform: scale(0.98);
+}
+
+/* ============ HALAMAN SOAL ============ */
+.soal-subtitle {
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+}
+
+.soal-list {
+    display: grid;
+    gap: 18px;
+}
+
+.soal-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.soal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.soal-mk-badge {
+    background: rgba(102, 51, 153, 0.3);
+    color: var(--primary-hover);
+    border: 1px solid var(--primary-hover);
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.soal-number {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.soal-pertanyaan {
+    color: var(--text-primary);
+    font-size: 1rem;
+    margin-bottom: 14px;
+    line-height: 1.5;
+}
+
+.soal-pilihan {
+    list-style: none;
+    display: grid;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.soal-pilihan-item {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+.pilihan-label {
+    color: var(--secondary);
+    font-weight: 700;
+    margin-right: 6px;
+}
+
+.soal-jawaban {
+    background: rgba(0, 255, 136, 0.08);
+    border: 1px solid var(--success-dim);
+    color: var(--success);
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+}
+
 @media (max-width: 480px) {
     .role-cards {
         grid-template-columns: 1fr;
@@ -1100,5 +1347,9 @@ tr:hover {
 
     .role-select-header h1 {
         font-size: 1.8rem;
+    }
+
+    .login-container {
+        padding: 24px 18px;
     }
 }
