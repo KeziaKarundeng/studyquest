@@ -185,21 +185,18 @@ class PengelolaMisi:
         if misi.status == "selesai":
             raise ValueError("Tidak bisa mengedit misi yang sudah selesai - misi dikunci")
         
-        if judul is not None:
-            misi.judul = judul
-        if mata_kuliah is not None:
-            misi.mata_kuliah = mata_kuliah
-        if deskripsi is not None:
-            misi.deskripsi = deskripsi
-        if jenis is not None:
-            misi.jenis = jenis
-        if tingkat_kesulitan is not None:
-            misi.tingkat_kesulitan = tingkat_kesulitan
-        if tenggat is not None:
-            misi.tenggat = tenggat
-        if status is not None:
-            misi.status = status
-        
+        # Reconstruct the subclass when type changes, so XP updates immediately.
+        candidate = Misi.from_dict(misi.to_dict())
+        updates = dict(judul=judul, mata_kuliah=mata_kuliah, deskripsi=deskripsi,
+                       jenis=jenis, tingkat_kesulitan=tingkat_kesulitan, tenggat=tenggat)
+        for key, value in updates.items():
+            if value is not None:
+                setattr(candidate, key, value)  # Validate without changing the original.
+        if status is not None and status != misi.status:
+            raise ValueError("Status pengerjaan diubah oleh mahasiswa, bukan dari edit misi.")
+        replacement = Misi.from_dict(candidate.to_dict())
+        self._misi_list = [replacement if item.id == misi_id else item for item in self._misi_list]
+
         return {"status": "sukses", "misi_id": misi.id}
     
     def hapus_misu(self, misi_id: str) -> dict:
@@ -302,9 +299,6 @@ class PengelolaMisi:
         # Dapatkan XP dari method polymorphic hitung_xp()
         xp_dapat = misi.hitung_xp()
         
-        # Berikan XP ke user
-        xp_info = self._user.add_xp(xp_dapat)
-        
         # Tandai misi selesai
         misi.status = "selesai"
         misi.diselesaikan_pada = True
@@ -312,7 +306,11 @@ class PengelolaMisi:
         
         # Tandai di user
         self._user.mark_mission_complete(misi.id)
-        
+        xp_info = self._user.add_xp(xp_dapat)
+        if sum(m.status == "selesai" and m.jenis == "ujian" for m in self._misi_list) >= 3 and "Pejuang Ujian" not in self._user.badges:
+            self._user._badges.add("Pejuang Ujian")
+            xp_info["badges_earned"].append("Pejuang Ujian")
+
         return {
             "status": "sukses",
             "pesan": "Misi '" + misi.judul + "' selesai! Mendapat " + str(xp_dapat) + " XP",

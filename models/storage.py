@@ -1,8 +1,9 @@
 """Model OOP: Class PenyimpananJSON untuk baca/tulis file JSON"""
 import json
 import os
-import tempfile
 from models.management import PengelolaMisi
+from models.user import User
+from models.persistence import write_json
 
 
 class PenyimpananJSON:
@@ -34,12 +35,9 @@ class PenyimpananJSON:
                 data = json.load(f)
             return PengelolaMisi.from_dict(data)
         except (json.JSONDecodeError, IOError) as e:
-            # File rusak - tampilkan pesan dan gunakan data default
-            print(f"PERINGATAN: File data rusak ({e}), menggunakan data default")
-            data_demo = self._baca_default_demo()
-            self.tulis_data(data_demo)
-            return data_demo
-    
+            # Never replace real work with demo data after a read failure.
+            raise OSError("Data tersimpan tidak dapat dibaca; file asli tetap dipertahankan.") from e
+
     def _baca_default_demo(self) -> PengelolaMisi:
         """Baca data demo dari file default."""
         default_file = self._default_path
@@ -67,38 +65,12 @@ class PenyimpananJSON:
             data = pengelola.to_dict()
             
         except Exception as e:
-            print(f"Gagal mengonversi data: {e}")
-            return False
+            raise OSError("Data tidak dapat disimpan.") from e
         
         # Atomic write: tulis ke file sementara dulu
-        tmp_path = self._file_path + ".tmp"
-        
-        try:
-            with open(tmp_path, "w", encoding="utf-8") as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
-            
-            # Verifikasi file sementara bisa dibaca
-            with open(tmp_path, "r", encoding="utf-8") as f:
-                # Coba parse
-                json.load(f)
-            
-            # Geser file sementara menjadi file utama
-            os.replace(tmp_path, self._file_path)
-            
-            return True
-            
-        except IOError as e:
-            # Jika gagal, bersihkan file tmp dan jangan overwrite
-            if os.path.exists(tmp_path):
-                os.remove(tmp_path)
-            print(f"Gagal menulis data: {e}")
-            return False
-        except Exception as e:
-            if os.path.exists(tmp_path):
-                os.remove(tmp_path)
-            print(f"Error tak terduga saat menyimpan: {e}")
-            return False
-    
+        write_json(self._file_path, data)
+        return True
+
     def file_rusak(self) -> bool:
         """Cek apakah file data rusak (bukan valid JSON)."""
         if not os.path.exists(self._file_path):

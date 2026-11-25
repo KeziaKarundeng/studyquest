@@ -62,7 +62,7 @@ if(missionForm){
         api('/api/missions').then(data=>{
             const mission=data.misi.find(m=>m.id===editId);if(!mission)throw new Error('Misi tidak ditemukan.');
             $('#misi-id').value=editId;
-            for(const [key,value] of Object.entries(mission)){const input=missionForm.elements.namedItem(key==='tenggat'?'tengggat':key);if(input)input.value=value || '';}
+            for(const [key,value] of Object.entries(mission)){const input=missionForm.elements.namedItem(key);if(input)input.value=value || '';}
             $('.add-mission-form h3').textContent='Edit misi kamu';missionForm.scrollIntoView({block:'start'});
         }).catch(error=>feedback(error.message,true));
     }

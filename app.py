@@ -1,14 +1,19 @@
 """Flask Application: StudyQuest - Kuliah Jadi Game"""
 import os
+import secrets
+import json
 from datetime import date, datetime
-from flask import Flask, render_template, request, jsonify, redirect, url_for, session
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session, g, flash
 from models.user import User
 from models.management import PengelolaMisi
 from models.storage import PenyimpananJSON
 from models.learning import learning_view, mission_from_content
+from models.persistence import read_json, write_json, data_transaction
 
 app = Flask(__name__)
-app.secret_key = "studyquest_secret_key_2024"
+app.secret_key = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
+app.config.update(MAX_CONTENT_LENGTH=12 * 1024 * 1024, SESSION_COOKIE_HTTPONLY=True,
+                  SESSION_COOKIE_SAMESITE="Lax")
 
 # Inisialisasi penyimpanan
 penyimpanan = PenyimpananJSON()
@@ -41,46 +46,93 @@ def muat_soal():
     return []
 
 
+def data_path(filename):
+    return os.path.join(penyimpanan._data_dir, filename)
+
+
 def muat_soal_universal():
-    """Muat data soal universal yang diunggah dosen."""
-    import json
-    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "soal_universal.json")
-    if os.path.exists(path):
-        with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return []
+    return read_json(data_path("soal_universal.json"), [])
 
 
 def tulis_soal_universal(data):
-    """Tulis data soal universal ke JSON."""
-    import json
-    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "soal_universal.json")
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    write_json(data_path("soal_universal.json"), data)
 
 
 def muat_jawaban_mahasiswa():
-    """Muat data jawaban mahasiswa."""
-    import json
-    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "jawaban_mahasiswa.json")
-    if os.path.exists(path):
-        with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return []
+    return read_json(data_path("jawaban_mahasiswa.json"), [])
 
 
 def tulis_jawaban_mahasiswa(data):
-    """Tulis data jawaban mahasiswa ke JSON."""
-    import json
-    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "jawaban_mahasiswa.json")
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    write_json(data_path("jawaban_mahasiswa.json"), data)
 
 
 def pengelola_belajar():
-    return learning_view(penyimpanan.baca_data(), muat_soal_universal(),
-                         muat_jawaban_mahasiswa(), session.get("nim")
-                         if session.get("role") == "mahasiswa" else None)
+    nim = session.get("nim") if session.get("role") == "mahasiswa" else None
+    roster = {m["nim"] for m in muat_kredensial().get("mahasiswa", []) if m.get("nim")}
+    manager = learning_view(penyimpanan.baca_data(), muat_soal_universal(),
+                            muat_jawaban_mahasiswa(), nim, roster)
+    profile = read_json(data_path("profiles.json"), {}).get(nim, {}) if nim else {}
+    manager.user.name = profile.get("name") or session.get("user_name") or "Mahasiswa"
+    manager.user.avatar = profile.get("avatar", "avatar1")
+    if nim:
+        manager.user._id = nim
+        session["user_name"] = manager.user.name
+    return manager
+
+
+@app.before_request
+def protect_requests():
+    api_request = request.path.startswith("/api/") or request.endpoint == "kirim_jawaban"
+    if api_request and not role_wajib():
+        return jsonify(status="error", pesan="Silakan masuk terlebih dahulu."), 401
+    mutation = request.method in ("POST", "PUT", "DELETE", "PATCH")
+    if mutation and session.get("preview_as_dosen") and request.endpoint not in ("login", "do_login"):
+        return jsonify(status="error", pesan="Mode preview hanya bisa membaca data."), 403
+    if request.endpoint in ("tambah_mission", "edit_mission", "hapus_mission", "nilai_pdf", "setup_demo") and session.get("role") != "dosen":
+        return jsonify(status="error", pesan="Hanya dosen yang dapat mengelola misi."), 403
+    if request.endpoint == "profile_post" and (session.get("role") != "mahasiswa" or not session.get("nim")):
+        return jsonify(status="error", pesan="Masuk sebagai mahasiswa untuk mengubah profil."), 403
+    if mutation and request.headers.get("Origin"):
+        from urllib.parse import urlsplit
+        if urlsplit(request.headers["Origin"]).netloc != request.host:
+            return jsonify(status="error", pesan="Asal permintaan tidak valid."), 403
+    # Validate JSON shape/types before any endpoint calls .get() or .strip().
+    if mutation and (request.path.startswith("/api/") or request.endpoint == "kirim_jawaban") and request.data:
+        data = request.get_json(silent=True)
+        if not isinstance(data, dict):
+            return jsonify(status="error", pesan="Data harus berupa objek JSON."), 400
+        text_fields = ("judul", "mata_kuliah", "deskripsi", "jenis", "tingkat_kesulitan",
+                       "status", "jawaban", "id_soal", "nim", "name", "avatar", "catatan")
+        if any(key in data and not isinstance(data[key], str) for key in text_fields):
+            return jsonify(status="error", pesan="Isian teks tidak valid."), 400
+        if any(key in data and data[key] is not None and not isinstance(data[key], str)
+               for key in ("tenggat", "tengggat")):
+            return jsonify(status="error", pesan="Tenggat harus berupa tanggal."), 400
+    if mutation and request.endpoint in ("tambah_mission", "edit_mission", "hapus_mission",
+            "start_mission", "complete_mission", "profile_post", "unggah_soal",
+            "kirim_jawaban", "nilai_pdf", "setup_demo"):
+        transaction = data_transaction(penyimpanan._data_dir)
+        transaction.__enter__()
+        g.data_transaction = transaction
+
+
+@app.teardown_request
+def finish_transaction(error=None):
+    transaction = g.pop("data_transaction", None)
+    if transaction:
+        transaction.__exit__(None, None, None)
+
+
+@app.errorhandler(OSError)
+@app.errorhandler(json.JSONDecodeError)
+def storage_error(error):
+    app.logger.error("Penyimpanan data gagal: %s", error)
+    return jsonify(status="error", pesan="Data belum dapat dibaca atau disimpan. Silakan coba lagi; data asli tidak direset."), 503
+
+
+@app.errorhandler(413)
+def upload_too_large(error):
+    return jsonify(status="error", pesan="Ukuran unggahan terlalu besar. PDF maksimal 10 MB."), 413
 
 
 # --- Route Login ---
@@ -236,18 +288,13 @@ def list_missions():
     
     misi_list = pengelola._misi_list
     
-    # Filter jenis
-    if jenis_filter != "semua":
-        misi_list = pengelola.filter_jenis(jenis_filter)
-    
-    # Filter status
-    if status_filter != "semua":
-        misi_list = pengelola.filter_status(status_filter)
-    
-    # Cari
-    if cari:
-        misi_list = pengelola.cari_misu(cari)
-    
+    if jenis_filter not in ("semua", "individu", "kelompok", "ujian") or status_filter not in ("semua", "belum mulai", "sedang dikerjakan", "selesai"):
+        return jsonify(status="error", pesan="Filter misi tidak valid."), 400
+    misi_list = [m for m in misi_list
+                 if (jenis_filter == "semua" or m.jenis == jenis_filter)
+                 and (status_filter == "semua" or m.status == status_filter)
+                 and (not cari or cari.strip().lower() in m.judul.lower())]
+
     # Konversi ke dict
     results = [m.to_dict() for m in misi_list]
     
@@ -263,7 +310,7 @@ def tambah_mission():
     """Tambah misi baru."""
     pengelola = penyimpanan.baca_data()
     
-    data = request.get_json()
+    data = request.get_json(silent=True)
     if not data:
         return jsonify({"status": "error", "pesan": "Data tidak diterima"}), 400
     
@@ -274,7 +321,7 @@ def tambah_mission():
             deskripsi=data.get("deskripsi", ""),
             jenis=data.get("jenis", "individu"),
             tingkat_kesulitan=data.get("tingkat_kesulitan", "mudah"),
-            tenggat=data.get("tengggat"),
+            tenggat=(data.get("tenggat", data.get("tengggat")) or "") if ("tenggat" in data or "tengggat" in data) else None,
         )
         penyimpanan.tulis_data(pengelola)
         return jsonify({"status": "sukses", "data": misi_result}), 201
@@ -285,9 +332,11 @@ def tambah_mission():
 @app.route("/api/missions/<misi_id>", methods=["PUT"])
 def edit_mission(misi_id):
     """Edit misi."""
+    if any(a.get("id_misi") == misi_id for a in muat_jawaban_mahasiswa()):
+        return jsonify(status="error", pesan="Misi sudah dimulai mahasiswa dan tidak dapat diubah atau dihapus."), 409
     pengelola = penyimpanan.baca_data()
     
-    data = request.get_json()
+    data = request.get_json(silent=True)
     if not data:
         return jsonify({"status": "error", "pesan": "Data tidak diterima"}), 400
     
@@ -299,7 +348,7 @@ def edit_mission(misi_id):
             deskripsi=data.get("deskripsi"),
             jenis=data.get("jenis"),
             tingkat_kesulitan=data.get("tingkat_kesulitan"),
-            tenggat=data.get("tengggat"),
+            tenggat=(data.get("tenggat", data.get("tengggat")) or "") if ("tenggat" in data or "tengggat" in data) else None,
             status=data.get("status"),
         )
         penyimpanan.tulis_data(pengelola)
@@ -355,6 +404,8 @@ def complete_mission(misi_id):
 @app.route("/api/missions/<misi_id>", methods=["DELETE"])
 def hapus_mission(misi_id):
     """Hapus misi."""
+    if any(a.get("id_misi") == misi_id for a in muat_jawaban_mahasiswa()):
+        return jsonify(status="error", pesan="Misi sudah dimulai mahasiswa dan tidak dapat diubah atau dihapus."), 409
     pengelola = penyimpanan.baca_data()
     
     try:
@@ -438,7 +489,7 @@ def history():
             "judul": m.judul,
             "jenis": m.jenis,
             "tingkat_kesulitan": m.tingkat_kesulitan,
-            "xp_dapat": m.hitung_xp(),
+            "xp_dapat": getattr(m, "awarded_xp", m.hitung_xp()),
             "w_selesai": m.diselesaikan_pada or "Belum tercatat",
         })
     
@@ -465,28 +516,22 @@ def profile_get():
 @app.route("/api/profile", methods=["POST"])
 def profile_post():
     """Update profil pengguna (nama dan avatar)."""
-    pengelola = penyimpanan.baca_data()
-    
-    data = request.get_json()
+    data = request.get_json(silent=True)
     if not data:
-        return jsonify({"status": "error", "pesan": "Data tidak diterima"}), 400
-    
+        return jsonify(status="error", pesan="Data tidak diterima"), 400
+    user = pengelola_belajar().user
     try:
-        user = pengelola.user
         if "name" in data:
             user.name = data["name"]
         if "avatar" in data:
             user.avatar = data["avatar"]
-        
-        # Simpan ke file
-        penyimpanan.tulis_data(pengelola)
-        
-        return jsonify({
-            "status": "sukses",
-            "user": user.to_dict(),
-        }), 200
-    except ValueError as e:
-        return jsonify({"status": "error", "pesan": str(e)}), 400
+    except ValueError as error:
+        return jsonify(status="error", pesan=str(error)), 400
+    profiles = read_json(data_path("profiles.json"), {})
+    profiles[session["nim"]] = {"name": user.name, "avatar": user.avatar}
+    write_json(data_path("profiles.json"), profiles)
+    session["user_name"] = user.name
+    return jsonify(status="sukses", user=user.to_dict())
 
 
 # --- Halaman Statis ---
@@ -565,7 +610,7 @@ def page_history():
         "judul": m.judul,
         "jenis": m.jenis,
         "tingkat_kesulitan": m.tingkat_kesulitan,
-        "xp_dapat": m.hitung_xp(),
+        "xp_dapat": getattr(m, "awarded_xp", m.hitung_xp()),
         "w_selesai": m.diselesaikan_pada,
     } for m in selesai_list[:20]]
     return render_template("history.html", history_list=history_list)
@@ -705,6 +750,12 @@ def unggah_soal():
                 return render_template("unggah-soal.html", error="PDF harus berisi data dan maksimal 10 MB.",
                                        soal_list=soal_list, role=session.get("role")), 400
 
+            signature = file.stream.read(5)
+            file.stream.seek(0)
+            if signature != b"%PDF-":
+                return render_template("unggah-soal.html", error="Isi file bukan PDF yang valid.",
+                                       soal_list=soal_list, role=session.get("role")), 400
+
             nama_file = f"{id_soal}_{uuid.uuid4().hex[:8]}.pdf"
             upload_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "soal")
             os.makedirs(upload_dir, exist_ok=True)
@@ -726,16 +777,10 @@ def unggah_soal():
         soal_list.append(soal_baru)
         tulis_soal_universal(soal_list)
 
-        return render_template("unggah-soal.html",
-            success=f"Misi {judul} berhasil dibuat!",
-            soal_list=muat_soal_universal(),
-            role=session.get("role"),
-        )
+        flash(f"Misi {judul} berhasil dibuat!")
+        return redirect(url_for("unggah_soal"), code=303)
 
-    return render_template("unggah-soal.html",
-        soal_list=muat_soal_universal(),
-        role=session.get("role"),
-    )
+    return render_template("unggah-soal.html", soal_list=muat_soal_universal(), role=session.get("role"))
 
 
 # --- Soal untuk Mahasiswa ---
@@ -798,7 +843,7 @@ def kirim_jawaban():
     if session.get("preview_as_dosen"):
         return jsonify({"status": "error", "pesan": "Mode preview - Anda tidak bisa mengerjakan soal!"}), 403
 
-    data = request.get_json()
+    data = request.get_json(silent=True)
     if not data:
         return jsonify({"status": "error", "pesan": "Data tidak diterima"}), 400
 
@@ -894,25 +939,28 @@ def lihat_progres():
         return redirect(url_for("dashboard"))
 
     soal_list = muat_soal_universal()
+    for mission in penyimpanan.baca_data()._misi_list:
+        soal_list.append(dict(id=mission.id, judul=mission.judul,
+                              mata_kuliah=mission.mata_kuliah, tipe="tanpa_soal",
+                              status="", legacy=True))
     jawaban_list = muat_jawaban_mahasiswa()
-
-    # Gabungkan data soal dengan jawaban
     progres = []
-    for s in soal_list:
-        jawaban_soal = [j for j in jawaban_list if j.get("id_soal") == s["id"] and j.get("status") != "sedang dikerjakan"]
-        progres.append({
-            "soal": s,
-            "jawaban_list": jawaban_soal,
-            "total_jawab": len(jawaban_soal),
-            "total_mulai": sum(j.get("id_soal") == s["id"] and j.get("status") == "sedang dikerjakan" for j in jawaban_list),
-        })
-
-    return render_template("lihat-progres.html",
-        progres=progres,
-        total_soal=len(soal_list),
-        total_jawaban=sum(j.get("status") != "sedang dikerjakan" for j in jawaban_list),
-        role=session.get("role"),
-    )
+    for content in soal_list:
+        key = "id_misi" if content.get("legacy") else "id_soal"
+        records = [j for j in jawaban_list if j.get(key) == content["id"]]
+        submitted = {}
+        started = set()
+        for record in records:
+            if record.get("status") == "sedang dikerjakan":
+                started.add(record.get("nim"))
+            elif record.get("jawaban"):
+                submitted.setdefault(record.get("nim"), record)
+        progres.append({"soal": content, "jawaban_list": list(submitted.values()),
+                        "total_jawab": len(submitted),
+                        "total_mulai": len(started - set(submitted))})
+    return render_template("lihat-progres.html", progres=progres,
+        total_soal=len(soal_list), total_jawaban=sum(p["total_jawab"] for p in progres),
+        role=session.get("role"))
 
 
 # --- Perspektif Mahasiswa (Dosen lihat tapi TIDAK BISA mengerjakan) ---
@@ -1002,4 +1050,4 @@ if __name__ == "__main__":
     
     # Jalankan aplikasi
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+    app.run(host="0.0.0.0", port=port, debug=os.environ.get("FLASK_DEBUG") == "1")

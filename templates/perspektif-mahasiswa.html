@@ -16,7 +16,7 @@
         <div class="soal-header">
             <span class="soal-mk-badge">{{ s.mata_kuliah }}</span>
             <span class="soal-type-badge {{ s.tipe }}">{{ {'pilihan_ganda':'PG', 'pdf':'PDF', 'tanpa_soal':'Tugas'}.get(s.tipe, s.tipe) }}</span>
-            <span class="soal-status {{ s.status }}">{{ 'Dikerjakan' if s.status == 'dikerjakan' else 'Belum' }}</span>
+            <span class="soal-status {{ s.status }}">{{ jawab | length }} mengirim</span>
         </div>
 
         {% if s.tipe == 'pilihan_ganda' %}
